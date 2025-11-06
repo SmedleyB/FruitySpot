@@ -41,7 +41,7 @@ Download & run
 
 Using the webpage (index.html)
 1. Open the page in your browser (served as above).
-2. Click the "Login" / "Authorize" button (or similar) to sign in with Spotify — you'll be redirected to Spotify and then back to the app.
+2. Click the "Sign In" button to sign in with Spotify — you'll be redirected to Spotify and then back to the app.
 3. After approval the app receives an access token and will show account/playback info.
 4. Click on the album art in the lower right corner to access hidden buttons allowing you to connect to Spotify and load playlists by pasting their URLs. (Note that not all buttons are functional, but what does work is enough to replicate the jukebox experience.)
 5. Looks best in fullscreen @ 1920x1080!
