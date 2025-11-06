@@ -45,4 +45,6 @@ Using the webpage (index.html)
 2. Click the "Sign In" button to sign in with Spotify — you'll be redirected to Spotify and then back to the app.
 3. After approval the app receives an access token and will show account/playback info.
 4. Click on the album art in the lower right corner to access hidden buttons allowing you to connect to Spotify and load playlists by pasting their URLs. (Note that not all buttons are functional, but what does work is enough to replicate the jukebox experience.)
-5. Looks best in fullscreen @ 1920x1080!
+5. Select tracks by clicking on the song name or entering in track number via keyboard.
+6. Looks best in fullscreen @ 1920x1080!
+7. For a nice clean look, load a playlist of 100 songs by 50 distinct artists and ordered by artist name. You can use AI to help generate such a playlist.
