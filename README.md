@@ -1,6 +1,8 @@
 # FruitySpot — Quick setup & usage
 
+
 <img width="1280" height="720" alt="indieglo" src="https://github.com/user-attachments/assets/6b4e572e-c7b9-4fb2-930f-363043d3bcd1" />
+
 
 FruitySpot is a small client-side demo that uses the Spotify Web API / Web Playback SDK to authorize with Spotify and control playback from your browser.
 The migration was done via AI with only very, very minor manual tweaks of the created html. It's probably far from perfect but it works!
