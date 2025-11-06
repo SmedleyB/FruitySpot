@@ -1,4 +1,4 @@
-```markdown
+
 # FruitySpot — Quick setup
 
 FruitySpot is a small client-side demo that uses the Spotify Web API / Web Playback SDK to recreate a Fruitbox jukebox skin in a web browser and pulls songs from a Spotify playslist.
