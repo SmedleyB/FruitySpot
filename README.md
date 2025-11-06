@@ -1,19 +1,34 @@
+# FruitySpot — Quick setup & usage
 
-# FruitySpot — Quick setup
+FruitySpot is a small client-side demo that uses the Spotify Web API / Web Playback SDK to authorize with Spotify and control playback from your browser.
 
-FruitySpot is a small client-side demo that uses the Spotify Web API / Web Playback SDK to recreate a Fruitbox jukebox skin in a web browser and pulls songs from a Spotify playslist.
+Summary
+- You must paste your Spotify Client ID into the HTML (see the code snippet below).
+- You do NOT need to add a redirect_uri to the HTML — the app builds it dynamically from the browser origin (e.g. window.location.origin). Register that runtime origin in your Spotify Developer Dashboard (for example: http://localhost:8000).
 
-Important: you must paste your Spotify Client ID into the HTML. You do NOT need to paste or define a redirect_uri in the HTML — the app builds that dynamically from the browser location (e.g. window.location.origin).
-
-Quick edit
-1. Open the main HTML (e.g. `index.html`) and replace the CLIENT_ID placeholder with your Spotify Client ID:
+Paste your Client ID
+Open `index.html` and replace the CLIENT_ID placeholder with your Spotify Client ID:
 ```js
 const CLIENT_ID = 'YOUR_SPOTIFY_CLIENT_ID_HERE';
 ```
-2. Do NOT add a hard-coded redirect URI in the HTML. Register the runtime origin you will use (for example `http://localhost:8000`) in your Spotify Developer Dashboard — the app uses the current origin as the redirect URI.
 
-Serve locally (for testing)
-- From the project folder:
+Prerequisites
+- Spotify Premium (required for playback via the Web Playback SDK)
+- Spotify Developer account (create an app to get a Client ID)
+- Python 3.x (to serve files locally for development)
+
+Register redirect origin
+- In the Spotify Developer Dashboard, add the runtime origin you will use as a Redirect URI:
+  - For local testing: `http://localhost:8000` (or `http://127.0.0.1:8000`)
+  - The redirect URI used at runtime must exactly match one registered in the dashboard (scheme, host, port, trailing slash).
+
+Download & run
+- Clone or download the repo:
+  ```
+  git clone https://github.com/SmedleyB/FruitySpot.git
+  cd FruitySpot
+  ```
+- Serve the folder locally:
   - macOS / Linux:
     ```
     python3 -m http.server 8000
@@ -22,11 +37,11 @@ Serve locally (for testing)
     ```
     py -3 -m http.server 8000
     ```
-Open http://localhost:8000 (or your chosen port).
+- Open: http://localhost:8000/index.html
 
-Prereqs
-- Spotify Premium (required for playback)
-- Spotify Developer account (create an app to get a Client ID)
-- Python 3.x (to serve files locally)
-
-That's it — paste your Client ID, register your local origin in the Spotify Dashboard, and run the local server.
+Using the webpage (index.html)
+1. Open the page in your browser (served as above).
+2. Click the "Login" / "Authorize" button (or similar) to sign in with Spotify — you'll be redirected to Spotify and then back to the app.
+3. After approval the app receives an access token and will show account/playback info.
+4. Click on the album art in the lower right corner to access hidden buttons allowing you to connect to Spotify and load playlists by pasting their URLs. (Note that not all buttons are functional, but what does work is enough to replicate the jukebox experience.)
+5. Looks best in fullscreen @ 1920x1080!
