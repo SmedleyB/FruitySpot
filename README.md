@@ -30,4 +30,3 @@ Prereqs
 - Python 3.x (to serve files locally)
 
 That's it — paste your Client ID, register your local origin in the Spotify Dashboard, and run the local server.
-```
