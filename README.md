@@ -45,6 +45,7 @@ Download & run
 - Open: http://localhost:8000/index.html
 
 Using the webpage (index.html)
+
 1.The Spotify app needs to be running on your device or desktop.
 2. Open the page in your browser (served as above).
 3. Click the "Sign In" button to sign in with Spotify — you'll be redirected to Spotify and then back to the app.
