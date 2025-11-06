@@ -1,6 +1,7 @@
 # FruitySpot — Quick setup & usage
 
 FruitySpot is a small client-side demo that uses the Spotify Web API / Web Playback SDK to authorize with Spotify and control playback from your browser.
+The migration was done via AI with only very, very minor manual tweaks of the created html. It's probably far from perfect but it works!
 
 Summary
 - You must paste your Spotify Client ID into the HTML (see the code snippet below).
