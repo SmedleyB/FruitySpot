@@ -1,4 +1,4 @@
-# FruitySpot — Quick setup & usage
+# FruitySpot — Quick setup, usage and notes from developer
 
 
 <img width="1280" height="720" alt="indieglo" src="https://github.com/user-attachments/assets/6b4e572e-c7b9-4fb2-930f-363043d3bcd1" />
