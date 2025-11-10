@@ -791,6 +791,19 @@ function showSelectedNumberInMiddleBox(num){
       }
     }
     if(ev.key === 'Backspace'){ buf=''; if(timer){ clearTimeout(timer); timer=null; } showSelectedNumberInMiddleBox(null); }
+    // Arrow key navigation for pagination
+    if(ev.key === 'ArrowLeft' || ev.key === 'ArrowRight'){
+      if(playlistPaginationState && paginationControls && paginationControls.style.display !== 'none'){
+        ev.preventDefault();
+        if(ev.key === 'ArrowLeft'){
+          const p = Math.max(1, playlistPaginationState.currentPage - 1);
+          void gotoPage(p);
+        } else {
+          const p = Math.min(playlistPaginationState.pages, playlistPaginationState.currentPage + 1);
+          void gotoPage(p);
+        }
+      }
+    }
   });
 })();
 

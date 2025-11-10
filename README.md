@@ -51,13 +51,13 @@ Using the webpage (index.html)
 3. Click the "Sign In" button to sign in with Spotify — you'll be redirected to Spotify and then back to the app.
 4. After approval the app receives an access token and will show account/playback info.
 5. Click on the album art in the lower right corner to access hidden buttons allowing you to connect to Spotify and load playlists by pasting their URLs. You can click on the album art again to re-hide the buttons. (Note that not all buttons are functional, but what does work is enough to replicate the jukebox experience.)
-6. Select tracks by clicking on the song name or entering in track number via keyboard.
+6. Select tracks by clicking on the song name or entering in track number via keyboard. If you load a playlist with more than 100 songs, use the left/right arrow keys to navigate between pages.
 7. Looks best in fullscreen @ 1920x1080!
 8. For a nice clean look, load a playlist of 100 songs by 50 distinct artists and ordered by artist name. You can use AI to help generate such a playlist.
 
 Other Notes:
 
-1. You can load a playlist with more than 100 songs and next/previous page buttons will appear allowing you to swap between pages. Those buttons aren't very attractive and ideally some animation would be added when swapping pages. In the future, I may try to add support for left/right arrow keys to trigger page changes.
+1. You can load a playlist with more than 100 songs and next/previous page buttons will appear allowing you to swap between pages. You can use the on-screen buttons or press the left/right arrow keys on your keyboard to navigate between pages. Those buttons aren't very attractive and ideally some animation would be added when swapping pages.
 2. Writing 2 artists per title strip is not formatted well and is sometimes hard to read. I haven't spent time enhancing that - the original goal was to mimic a 100-track vintage jukebox where title strips only contain a single artist.
 3. Swapping betwen Spotify playback devices in the menu seems to kind of work? I haven't tested that funtionality too much,
 4. The queue sometimes exhibits weird behavior. The queue is designed so that it will read in and display whatever's in your local Spotify app's queue - both "Next in queue" and "Next from queue". Adding songs from the web page should add songs to the bottom of "Next in queue". There's also a bug in the Spotify APIs that sometimes causes the queue to list the same song multiple times even though it's in your queue only once (or perhaps not at all?). But adding songs should still queue and playback correctly despite what you see in the webpage's queue list.
