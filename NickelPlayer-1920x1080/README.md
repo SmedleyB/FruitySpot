@@ -6,7 +6,7 @@
 
 I asked Google Gemini to make a web-based Spotify front end that resembles a classic jukebox and this is what it created and refined over many iterations. I guess Gemini is a vaporwave aestetic fan.
 
-Overall functionaility and usage is the same as FruitySpot, and you can follow the same setup instructions detailed in the FruitySpot readme @ https://github.com/SmedleyB/FruitySpot/blob/main/README.md. Just serve up the NickelPlayer folder and files instead.
+Overall functionaility and usage is the same as FruitySpot, and you can follow the same setup instructions detailed in the FruitySpot readme @ https://github.com/SmedleyB/FruitySpot/blob/main/FruitySpot/README.md. Just serve up the NickelPlayer folder and files instead.
 
 ### Nickel Player specific notes:
 
