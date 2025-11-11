@@ -1,0 +1,1139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>The Nickel Player - Spotify Jukebox Remote</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Monoton&family=Press+Start+2P&family=Inter:wght@400;700;900&display=swap');
+
+        :root {
+            --jukebox-black: #000000;
+            --jukebox-deep-gray: #0a0a0a;
+            --jukebox-bright-green: #00E400; /* Primary Status Glow */
+            --jukebox-neon-blue: #00FFFF; /* Title Number Glow */
+            --jukebox-neon-pink: #FF00FF; /* Secondary Frame/Accent Glow */
+        }
+
+        /* CRITICAL: Ensure body takes full screen and prevents scrolling */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--jukebox-black);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            width: 100vw;
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+        }
+
+        /* Main Jukebox Body */
+        .jukebox {
+            width: 100%;
+            height: 100vh;
+            background: var(--jukebox-deep-gray);
+            border: 5px solid var(--jukebox-neon-blue);
+            box-shadow: 0 0 15px var(--jukebox-neon-blue), 0 0 40px rgba(0, 255, 255, 0.3);
+            position: relative;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Inner chrome-like decorative layer (Pink) */
+        .jukebox::before {
+            content: '';
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            right: 2px;
+            bottom: 2px;
+            border: 2px solid var(--jukebox-neon-pink);
+            pointer-events: none;
+        }
+
+        /* Top Neon-style Display */
+        .neon-title {
+            font-family: 'Monoton', cursive;
+            text-shadow: 0 0 4px #fff, 0 0 10px var(--jukebox-neon-pink), 0 0 20px var(--jukebox-neon-pink), 0 0 35px var(--jukebox-neon-pink);
+            color: var(--jukebox-neon-pink);
+            letter-spacing: 0.15em;
+        }
+
+        /* Status Message Glow */
+        #jukebox-status, #track-name, #player-device, .status-text {
+            color: var(--jukebox-bright-green);
+            text-shadow: 0 0 5px var(--jukebox-bright-green), 0 0 10px rgba(0, 228, 0, 0.4);
+            font-family: 'Press Start 2P', monospace;
+        }
+
+        /* Main area for title strips - CRITICAL: must flex-grow to take remaining height */
+        .title-strip-area {
+            flex-grow: 1;
+            padding: 10px;
+            overflow: hidden; /* Prevent scrolling */
+        }
+
+        /* Grid for Title Strips - CRITICAL: Flow columns first (00, 02, 04...) and set height to 100% of container */
+        #search-results {
+            display: grid;
+            gap: 4px;
+            width: 100%;
+            height: 100%; /* Take full height of .title-strip-area */
+            grid-auto-flow: column; /* FILL DOWN COLUMNS FIRST */
+
+            /* Enforce 16 rows for 48 strips (3 columns) to fill viewport height */
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            grid-template-rows: repeat(16, minmax(0, 1fr));
+        }
+
+        /* Song Card Item (The 48 strips) */
+        .song-card {
+            height: auto;
+            cursor: default; /* Changed from pointer to default for individual song clicks */
+            border-left: 3px solid transparent;
+            transition: all 0.15s;
+            color: #ccc;
+            background-color: var(--jukebox-deep-gray);
+            border: 2px solid #333;
+            border-radius: 4px;
+            display: flex;
+            flex-direction: column; /* Stack content vertically */
+            justify-content: space-between;
+            padding: 2px 4px; /* Tight padding for fitting */
+        }
+
+        /* Hover effects - only highlight applies to the strip, not the click */
+        .song-card:hover {
+            background-color: #0d0d0d;
+            border-left: 3px solid var(--jukebox-bright-green);
+            box-shadow: 0 0 5px rgba(0, 228, 0, 0.4);
+            margin-left: -2px;
+        }
+        
+        /* Highlight effect for the currently selected strip */
+        .strip-highlight {
+            background-color: #001f00; /* Darker green background */
+            border-color: var(--jukebox-bright-green) !important;
+            border-left: 3px solid var(--jukebox-bright-green) !important;
+            box-shadow: 0 0 10px var(--jukebox-bright-green);
+        }
+
+        /* Track names (A and B) */
+        .track-name-a, .track-name-b {
+            font-size: 0.7rem; /* Tiny font for fitting */
+            font-weight: 700;
+            text-align: center;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            padding: 2px 0;
+            line-height: 1.1;
+            background-color: var(--jukebox-black);
+            flex-grow: 1;
+        }
+
+        /* Artist Name (Middle) */
+        .artist-name {
+            font-size: 0.7rem;
+            color: hotpink;
+            font-weight: 600;
+            text-align: center;
+            border-top: 1px dashed #222;
+            border-bottom: 1px dashed #222;
+            padding: 2px 0;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            background-color: var(--jukebox-deep-gray);
+        }
+
+        /* Selection Number (00-99 for song) - Cyan/Blue Glow */
+        .selection-key {
+            font-family: 'Press Start 2P', monospace;
+            font-size: 0.65rem;
+            color: var(--jukebox-neon-blue);
+            text-shadow: 0 0 5px var(--jukebox-neon-blue);
+            flex-shrink: 0;
+            width: 25px;
+            text-align: right;
+            margin-right: 4px;
+            padding-right: 2px;
+        }
+
+        /* NEW: Element to balance the selection key for centering the track name */
+        .selection-spacer {
+            flex-shrink: 0;
+            /* width (25px) + margin (4px) + padding (2px) of selection-key = 31px */
+            width: 31px; 
+            visibility: hidden;
+        }
+        
+        /* Jukebox Buttons */
+        .jukebox-btn {
+            background: #000;
+            color: var(--jukebox-bright-green);
+            font-weight: 900;
+            border: 3px solid var(--jukebox-bright-green);
+            box-shadow: 0 0 5px var(--jukebox-bright-green), inset 0 0 3px var(--jukebox-bright-green);
+            transition: all 0.1s;
+        }
+        .jukebox-btn:hover {
+            background: #001f00;
+        }
+
+        /* Volume Slider */
+        .volume-slider::-webkit-slider-thumb {
+            background: var(--jukebox-neon-pink);
+            box-shadow: 0 0 10px var(--jukebox-neon-pink), 0 0 20px rgba(255, 0, 255, 0.5);
+            border: 2px solid #fff;
+        }
+
+        /* Modal Style */
+        .modal-content-playlist {
+            background-color: #1a1a1a;
+            border: 4px solid var(--jukebox-neon-blue);
+            box-shadow: 0 0 20px var(--jukebox-neon-blue);
+        }
+
+        /* Queue Scrolling CSS */
+        @keyframes scroll-queue {
+            0% { transform: translateY(0); }
+            100% { transform: translateY(var(--scroll-distance)); } /* CSS variable is set by JS */
+        }
+
+        .scrolling-queue {
+            animation-play-state: running !important;
+            /* Ensures smooth loop from end to start by matching the content */
+            animation-iteration-count: infinite; 
+            animation-timing-function: linear;
+        }
+
+        /* Smallest font for queue items */
+        .queue-item {
+            font-size: 0.65rem; /* ~10px */
+            line-height: 1.2;
+            border-bottom: 1px solid #1f1f1f;
+        }
+
+    </style>
+</head>
+<body>
+
+    <div id="auth-modal" class="modal-overlay fixed inset-0 z-50 flex items-center justify-center p-4 hidden" style="background-color: rgba(0, 0, 0, 0.8);">
+        <div class="modal-content w-full max-w-lg p-6 text-gray-100 rounded-xl" style="background-color: #1a1a1a; border: 4px solid var(--jukebox-neon-pink); box-shadow: 0 0 20px var(--jukebox-neon-pink);">
+            <h2 class="text-3xl font-bold mb-4 text-center neon-title">Jukebox Setup Required</h2>
+            <p class="mb-4 text-sm text-gray-400">
+                To link to Spotify and control your external client, please follow these steps:
+            </p>
+            <ol class="list-decimal list-inside space-y-2 mb-6 text-sm p-4 rounded-lg border border-cyan-500">
+                <li>Go to the Spotify Developer Dashboard, create an app, and add the current page's URL as a **Redirect URI**.</li>
+                <li>Get your **Client ID** and paste it below.</li>
+                <li>Ensure your main Spotify app (desktop, mobile, etc.) is **running** to receive commands.</li>
+            </ol>
+
+            <label for="client-id-input" class="block text-lg font-semibold mb-2" style="color: var(--jukebox-neon-blue);">Spotify Client ID</label>
+            <input type="text" id="client-id-input" placeholder="Paste your Client ID here..."
+                   class="w-full p-3 bg-gray-900 text-white rounded-lg border border-gray-600 focus:outline-none focus:ring-2 focus:ring-pink-500 mb-6">
+
+            <div class="flex justify-center space-x-4">
+                <button id="start-auth-btn"
+                        class="jukebox-btn px-6 py-3 text-lg transition duration-150">
+                    Authorize Spotify
+                </button>
+            </div>
+            <p id="error-message" class="text-center text-red-400 mt-4 text-sm hidden"></p>
+        </div>
+    </div>
+
+    <div id="playlist-modal" class="modal-overlay fixed inset-0 z-50 flex items-center justify-center p-4 hidden" style="background-color: rgba(0, 0, 0, 0.8);">
+        <div class="modal-content-playlist w-full max-w-lg p-6 text-gray-100 rounded-xl">
+            <h2 class="text-3xl font-bold mb-4 text-center" style="color: var(--jukebox-neon-blue); text-shadow: 0 0 10px var(--jukebox-neon-blue);">Load Jukebox Strips</h2>
+            <p class="mb-4 text-sm text-gray-400">
+                Paste the URI or URL of the Spotify Playlist you want to load. The jukebox will display the first **96 tracks (00-95)** across **48 title cards**.
+            </p>
+
+            <label for="playlist-uri-input" class="block text-lg font-semibold mb-2" style="color: var(--jukebox-bright-green);">Playlist URI / URL</label>
+            <input type="text" id="playlist-uri-input" placeholder="spotify:playlist:ID or URL"
+                   class="w-full p-3 bg-gray-900 text-white rounded-lg border border-gray-600 focus:outline-none focus:ring-2 focus:ring-pink-500 mb-6">
+
+            <div class="flex justify-center space-x-4">
+                <button id="load-playlist-btn"
+                        class="jukebox-btn px-6 py-3 text-lg transition duration-150">
+                    LOAD 96 TRACKS
+                </button>
+                <button id="close-playlist-modal-btn"
+                        class="jukebox-btn px-6 py-3 text-lg transition duration-150 border-gray-500 text-gray-300"
+                        style="box-shadow: none;">
+                    Cancel
+                </button>
+            </div>
+        </div>
+    </div>
+
+
+    <div id="jukebox-app" class="jukebox">
+
+        <header class="text-center py-4 bg-gray-900 border-b-4 border-cyan-500 flex flex-col md:flex-row items-center justify-between px-6 flex-shrink-0">
+            <h1 class="neon-title text-3xl sm:text-4xl lg:text-5xl mb-2 md:mb-0">THE NICKEL PLAYER</h1>
+            <div class="flex items-center space-x-4">
+                <button id="open-playlist-modal-btn"
+                        class="jukebox-btn px-4 py-2 text-sm font-mono flex-shrink-0"
+                        title="Open Playlist URI Entry">
+                    LOAD PLAYLIST
+                </button>
+            </div>
+
+        </header>
+        <p id="jukebox-status" class="status-text text-sm sm:text-lg text-center py-2 mb-1 bg-gray-800 border-b border-gray-700 flex-shrink-0">Initialization: Please authorize Spotify to begin.</p>
+
+
+        <div class="title-strip-area">
+
+            <div id="search-results" class="grid w-full">
+                <p class="text-center text-gray-500 col-span-full p-10">
+                    Click 'LOAD PLAYLIST' to enter a URI and populate the 48 title cards (96 songs).
+                    <br>Once loaded, type the two-digit number (e.g., **05** or **93**) to play a song.
+                </p>
+            </div>
+
+        </div>
+
+
+   <div class="control-console h-[220px] bg-gray-900 border-t-4 border-pink-500 flex flex-row flex-shrink-0">
+
+    <div class="w-1/2 flex flex-col h-full border-r-4 border-pink-500">
+        
+        <div class="playback-info-area flex items-center justify-start p-2 h-1/2 border-b-2 border-cyan-500">
+            <img id="album-art-small"
+                 src="https://placehold.co/175x175/000/fff?text=ART"
+                 onerror="this.onerror=null; this.src='https://placehold.co/175x175/000/fff?text=ART';"
+                 alt="Now Playing Art"
+                 class="w-24 h-24 rounded-lg object-cover shadow-xl border-2 flex-shrink-0" 
+                 style="border-color: var(--jukebox-bright-green); box-shadow: 0 0 10px var(--jukebox-bright-green);">
+
+            <div class="playback-text-display flex-grow ml-4 overflow-hidden h-full pt-1"> 
+                <div id="playback-loading" class="text-white text-sm text-center pt-4">
+                    <p class="status-text">CONNECTING TO SPOTIFY API</p>
+                    <div class="animate-spin rounded-full h-5 w-5 border-b-2 border-pink-500 mx-auto mt-2"></div>
+                </div>
+
+                <div id="playback-display" class="w-full hidden">
+                    <div id="track-name" class="status-text text-md font-bold truncate">Title Missing</div>
+                    <div id="artist-name" class="text-sm text-gray-300 mb-1 truncate font-mono">Artist Unknown</div>
+                    <div id="player-device" class="status-text text-xs font-mono mb-1">Device: None</div>
+                    
+                    <div class="w-full bg-gray-700 rounded-full h-1.5 mt-1">
+                        <div id="progress-bar" class="h-1.5 rounded-full" style="width: 0%; background-color: var(--jukebox-neon-pink); box-shadow: 0 0 5px var(--jukebox-neon-pink);"></div>
+                    </div>
+                    <div class="flex justify-between text-[10px] mt-0.5 text-gray-400 font-mono">
+                        <span id="current-time">0:00</span>
+                        <span id="duration">0:00</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="selection-and-controls flex flex-row items-center justify-around h-1/2 px-4 py-1">
+            
+            <div class="flex flex-col items-center justify-center flex-shrink-0">
+                <p class="status-text text-xs font-mono mb-1" style="color: var(--jukebox-neon-blue);">KEY</p>
+                <div id="selection-display" class="bg-gray-700 px-3 py-1 rounded text-3xl font-mono text-center" style="color: var(--jukebox-neon-blue); text-shadow: 0 0 5px var(--jukebox-neon-blue);">
+                    <span id="digit-1">_</span><span id="digit-2">_</span>
+                </div>
+            </div>
+
+            <div class="flex items-center justify-center space-x-2 flex-shrink-0">
+                <button id="prev-btn" class="jukebox-btn p-1 w-7 h-7 flex items-center justify-center rounded-lg text-xs" title="Previous Track">
+                    <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M6 18V6H8V18H6ZM9.5 12L18 6V18L9.5 12Z"/></svg>
+                </button>
+                <button id="play-pause-btn" class="jukebox-btn p-1 w-9 h-7 flex items-center justify-center rounded-lg text-sm" title="Play/Pause">
+                    <svg id="play-icon" class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5V19L19 12L8 5Z"/></svg>
+                    <svg id="pause-icon" class="w-5 h-5 hidden" fill="currentColor" viewBox="0 0 24 24"><path d="M6 19H10V5H6V19ZM14 5V19H18V5H14Z"/></svg>
+                </button>
+                <button id="next-btn" class="jukebox-btn p-1 w-7 h-7 flex items-center justify-center rounded-lg text-xs" title="Next Track">
+                    <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M16 18V6H18V18H16ZM6 18L14.5 12L6 6V18Z"/></svg>
+                </button>
+            </div>
+
+            <div class="flex flex-col items-center justify-center flex-shrink-0 w-1/3">
+                <p class="status-text text-xs font-mono mb-1" style="color: var(--jukebox-neon-pink);">VOLUME</p>
+                <div class="flex items-center w-full space-x-1">
+                    <svg class="w-3 h-3 text-pink-300 flex-shrink-0" fill="currentColor" viewBox="0 0 24 24"><path d="M3 10V14C3 14.5523 3.44772 15 4 15H7.5L12 19V5L7.5 9H4C3.44772 9 3 9.44772 3 10ZM14.1213 9.87868C14.7071 10.4645 15 11.2322 15 12C15 12.7678 14.7071 13.5355 14.1213 14.1213L15.5355 15.5355C16.5928 14.4782 17.1554 13.2505 17.1554 12C17.1554 10.7495 16.5928 9.52179 15.5355 8.46447L14.1213 9.87868ZM17.6569 6.34315C19.7825 8.4687 20.8451 10.7495 20.8451 12C20.8451 13.2505 19.7825 15.5313 17.6569 17.6569L19.0711 19.0711C21.7825 16.3597 22.8451 14.079 22.8451 12C22.8451 9.92102 21.7825 7.64026 19.0711 4.92893L17.6569 6.34315Z"/></svg>
+                    <input type="range" id="volume-slider" min="0" max="100" value="70" class="volume-slider flex-grow" />
+                    <span id="volume-label" class="text-pink-300 text-xs w-7">70%</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <div class="w-1/2 h-full p-2">
+        <div class="queue-display-area h-full bg-gray-800 border-4 border-cyan-500 p-1 overflow-hidden relative">
+            <div class="flex justify-start items-center mb-1 border-b border-gray-700 pb-1">
+                <p class="status-text text-xs font-mono" style="color: var(--jukebox-neon-blue);">PLAY QUEUE</p>
+            </div>
+            <div id="jukebox-queue" class="relative w-full h-[90%] overflow-hidden">
+                <ul id="queue-list" class="absolute top-0 left-0 w-full" style="list-style: none; margin: 0; padding: 0;">
+                    <li class="text-gray-500 text-xs p-1 text-center">No songs queued.</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+    <script>
+        const CLIENT_ID_STORAGE_KEY = 'spotify_jukebox_client_id';
+        const TOKEN_STORAGE_KEY = 'spotify_jukebox_access_token';
+        const TOKEN_EXPIRY_KEY = 'spotify_jukebox_token_expiry';
+
+        const SPOTIFY_SCOPE = 'user-modify-playback-state playlist-read-private playlist-read-collaborative user-read-playback-state';
+
+        let accessToken = null;
+        let clientId = '';
+        let trackUris = [];
+        let trackDetails = []; 
+        let keyboardInput = [];
+        let currentPlaylistId = null;
+        const MAX_TRACKS_JUKEBOX = 96;
+        let lastSelectedStrip = null;
+        let queueList = []; 
+        const MAX_QUEUE_SIZE = 25; 
+        let currentPlayingTrackId = null; 
+
+        let activeDeviceId = null; 
+
+        // For throttled queue rendering
+        let renderQueued = false;
+
+        // --- Utility Functions ---
+
+        const select = (selector) => document.querySelector(selector);
+        const formatTime = (ms) => {
+            const totalSeconds = Math.floor(ms / 1000);
+            const minutes = Math.floor(totalSeconds / 60);
+            const seconds = totalSeconds % 60;
+            return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+        };
+
+        const showMessage = (text, isError = false) => {
+            const statusEl = select('#jukebox-status');
+            statusEl.textContent = text;
+            statusEl.classList.remove('text-red-400', 'status-text');
+            statusEl.classList.toggle('status-text', !isError);
+            statusEl.classList.toggle('text-red-400', isError);
+
+            statusEl.style.opacity = '1';
+
+            clearTimeout(statusEl.hideTimeout);
+            statusEl.hideTimeout = setTimeout(() => {
+                statusEl.style.opacity = '0';
+            }, 7500);
+        };
+
+        const updateKeypadDisplay = () => {
+            select('#digit-1').textContent = keyboardInput[0] !== undefined ? keyboardInput[0] : '_';
+            select('#digit-2').textContent = keyboardInput[1] !== undefined ? keyboardInput[1] : '_';
+        };
+
+        const getPlaylistIdFromUri = (uri) => {
+            if (!uri) return null;
+            uri = uri.trim();
+            if (uri.startsWith('spotify:playlist:')) {
+                return uri.split(':')[2];
+            }
+            if (uri.includes('open.spotify.com/playlist/')) {
+                const parts = uri.split('playlist/');
+                if (parts.length > 1) {
+                    return parts[1].split('?')[0].split('/')[0];
+                }
+            }
+            return null;
+        };
+        
+        // --- Queue Management Functions ---
+        
+        /**
+         * Adds a selected song to the queue and re-renders.
+         */
+        const addToQueue = (selectionNumber, trackName, artistName, trackUri) => { 
+            if (queueList.length >= MAX_QUEUE_SIZE) {
+                queueList.shift(); 
+            }
+
+            const timestamp = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            queueList.push({
+                id: crypto.randomUUID(),
+                name: trackName,
+                artist: artistName, 
+                time: timestamp,
+                uri: trackUri 
+            });
+
+            renderQueue();
+        };
+
+        /**
+         * Renders the queue list and manages the smooth infinite scrolling animation.
+         */
+        const renderQueue = () => {
+            if (renderQueued) return;
+            renderQueued = true;
+            requestAnimationFrame(() => {
+                renderQueued = false;
+
+                const queueListEl = select('#queue-list');
+                const queueContainer = select('#jukebox-queue');
+                
+                // 1. Build the list items HTML
+                const listItemsHtml = queueList.map((item, index) => {
+                    const relativePosition = (index + 1).toString().padStart(2, '0');
+                    // Format: Relative Position. Artist Name - Song Name (Time)
+                    return `
+                        <li class="flex justify-between items-center queue-item p-1">
+                            <span class="font-mono flex-shrink-0" style="color: var(--jukebox-bright-green);">${relativePosition}.</span>
+                            <span class="truncate ml-2 flex-grow text-gray-200" title="${item.artist} - ${item.name}">
+                                <span class="text-pink-400">${item.artist}</span> - ${item.name}
+                            </span>
+                            <span class="text-pink-400 text-[10px] ml-2 flex-shrink-0">${item.time}</span>
+                        </li>
+                    `;
+                }).join('');
+
+                if (!listItemsHtml) {
+                    queueListEl.innerHTML = '<li class="text-gray-500 text-xs p-1 text-center">No songs queued.</li>';
+                    queueListEl.classList.remove('scrolling-queue');
+                    queueListEl.style.animation = 'none';
+                    return;
+                }
+
+                // 2. Temporarily set the inner HTML to calculate the initial height (Original List)
+                queueListEl.innerHTML = listItemsHtml; 
+
+                // --- Scrolling Logic ---
+                queueListEl.style.animation = 'none';
+                queueListEl.classList.remove('scrolling-queue');
+
+                // Wait for DOM update
+                setTimeout(() => {
+                    const originalListHeight = queueListEl.scrollHeight;
+                    const containerHeight = queueContainer.clientHeight;
+
+                    if (originalListHeight > containerHeight) {
+                        // 3. For smooth looping, duplicate the list items HTML.
+                        const listItemsDuplicateHtml = listItemsHtml + listItemsHtml;
+                        queueListEl.innerHTML = listItemsDuplicateHtml;
+                        
+                        // The scroll distance is exactly the height of the original, non-duplicated list
+                        const scrollDistance = originalListHeight; 
+                        
+                        // Calculate duration: 0.05 seconds per pixel (20px per second)
+                        const scrollDuration = scrollDistance * 0.05;
+                        
+                        queueContainer.style.setProperty('--scroll-distance', `-${scrollDistance}px`);
+                        
+                        queueListEl.style.animation = `scroll-queue ${scrollDuration}s linear infinite`;
+                        queueListEl.classList.add('scrolling-queue');
+                    }
+                }, 50); 
+            });
+        };
+
+        // --- Spotify API Calls ---
+
+        /**
+         * Wrapper for Spotify API calls that handles token expiry and empty responses.
+         */
+        const fetchSpotify = async (endpoint, method = 'GET', body = null) => {
+            if (!accessToken) {
+                if(select('#auth-modal').classList.contains('hidden')) {
+                    showMessage('Authentication required.', true);
+                }
+                return null;
+            }
+            try {
+                const response = await fetch(`https://api.spotify.com/v1${endpoint}`, {
+                    method,
+                    headers: {
+                        'Authorization': `Bearer ${accessToken}`,
+                        'Content-Type': 'application/json',
+                    },
+                    body: body ? JSON.stringify(body) : null,
+                });
+
+                if (response.status === 401) {
+                    localStorage.removeItem(TOKEN_STORAGE_KEY);
+                    localStorage.removeItem(TOKEN_EXPIRY_KEY);
+                    accessToken = null;
+                    showMessage('Token expired. Please re-authorize.', true);
+                    select('#auth-modal').classList.remove('hidden');
+                    return null;
+                }
+
+                if (response.status === 204 || response.status === 202) return true;
+
+                if (!response.ok) {
+                    const errorText = await response.text().catch(() => '');
+                    let errorMessage = response.statusText;
+                    try {
+                        const json = JSON.parse(errorText);
+                        errorMessage = json.error?.message || errorMessage;
+                    } catch (_) {}
+                    throw new Error(`Spotify API error: ${errorMessage}`);
+                }
+
+                const text = await response.text();
+                if (!text) return true; 
+                try {
+                    return JSON.parse(text);
+                } catch {
+                    return true;
+                }
+
+
+            } catch (error) {
+                console.error('Spotify fetch error:', error);
+                showMessage(`API Error: ${error.message}`, true);
+                return null;
+            }
+        };
+
+        /**
+         * Fetches the current Spotify queue and populates the local list.
+         * NOTE: This is no longer called on page load, only during periodic state sync (if needed).
+         */
+        const fetchSpotifyQueue = async () => {
+            const data = await fetchSpotify('/me/player/queue');
+
+            if (!data || !data.queue) {
+                console.log('No Spotify queue data received or player is idle.');
+                return;
+            }
+
+            queueList = [];
+            
+            const tracks = data.queue.filter(item => item && item.name);
+
+            tracks.forEach((track) => { 
+                if (queueList.length < MAX_QUEUE_SIZE) {
+                    const artistName = track.artists?.map(a => a.name).join(', ') || 'Unknown Artist';
+                    addToQueue("", track.name, artistName, track.uri); 
+                }
+            });
+            
+            // Removed status messages here as they are misleading without initial sync.
+            
+            renderQueue();
+        }
+
+
+        const loadPlaylistTracks = async (uri) => {
+            const playlistId = getPlaylistIdFromUri(uri);
+            if (!playlistId) {
+                return showMessage('Invalid Playlist URI format. Use spotify:playlist:ID or a full URL.', true);
+            }
+            currentPlaylistId = playlistId;
+
+            const resultsEl = select('#search-results');
+            resultsEl.innerHTML = '<p class="text-center text-gray-500 col-span-full p-4 status-text">Loading tracks (up to 100)...</p>';
+
+            const data = await fetchSpotify(`/playlists/${playlistId}/tracks?market=from_token&fields=items(track(uri,name,artists(name),album(images)))&limit=${MAX_TRACKS_JUKEBOX}`);
+
+            if (!data || !data.items) {
+                resultsEl.innerHTML = '<p class="text-center text-red-400 col-span-full p-4">Could not retrieve playlist tracks.</p>';
+                showMessage('Failed to load playlist.', true);
+                trackUris = [];
+                trackDetails = [];
+                return;
+            }
+
+            const tracks = data.items.filter(item => item.track).map(item => item.track);
+            trackUris = tracks.map(t => t.uri);
+            
+            trackDetails = tracks.map(t => ({
+                uri: t.uri,
+                name: t.name,
+                artist: t.artists.map(a => a.name).join(', ')
+            }));
+
+            renderTitleStrips(tracks, playlistId);
+            showMessage(`Loaded ${tracks.length} tracks (00-${Math.min(tracks.length - 1, 95).toString().padStart(2, '0')}). Use the keyboard to select a track.`);
+            select('#playlist-modal').classList.add('hidden');
+        };
+
+        const renderTitleStrips = (tracks, playlistId) => {
+            const resultsEl = select('#search-results');
+            resultsEl.innerHTML = '';
+
+            const MAX_STRIPS = 48;
+
+            for (let i = 0; i < MAX_STRIPS; i++) {
+                const trackIndexA = i * 2;
+                const trackIndexB = i * 2 + 1;
+
+                const trackA = tracks[trackIndexA];
+                const trackB = tracks[trackIndexB];
+
+                const selectionKeyA = trackIndexA.toString().padStart(2, '0');
+                const selectionKeyB = trackIndexB.toString().padStart(2, '0');
+
+                // Get artist name for Track A
+                const artistA = trackA ? trackA.artists.map(a => a.name).join(', ') : '';
+                // Get artist name for Track B
+                const artistB = trackB ? trackB.artists.map(a => a.name).join(', ') : '';
+                
+                let combinedArtistName = 'Empty Strip';
+                
+                if (trackA && trackB) {
+                    // Case 1: Both tracks exist
+                    if (artistA === artistB) {
+                        // If artists are the same, show it once
+                        combinedArtistName = artistA;
+                    } else {
+                        // If artists are different, show both separated by /
+                        combinedArtistName = `${artistA} / ${artistB}`;
+                    }
+                } else if (trackA) {
+                    // Case 2: Only track A exists
+                    combinedArtistName = artistA;
+                } else if (trackB) {
+                    // Case 3: Only track B exists
+                    combinedArtistName = artistB;
+                } 
+                // If neither exists, it remains 'Empty Strip'
+
+                const trackNameA = trackA ? trackA.name : '--- EMPTY TRACK A ---';
+                const trackNameB = trackB ? trackB.name : '--- EMPTY TRACK B ---';
+
+                const card = document.createElement('div');
+                card.className = 'song-card';
+                card.setAttribute('data-strip-index', i);
+
+                // --- MODIFIED: Separate clickable elements for Track A and Track B ---
+                card.innerHTML = `
+                    <div class="flex items-center track-click-target ${trackA ? 'cursor-pointer' : ''}" data-track-type="A" data-track-index="${trackIndexA}">
+                        <div class="selection-key">${selectionKeyA}</div>
+                        <div class="track-name-a">${trackNameA}</div>
+                        <div class="selection-spacer"></div>
+                    </div>
+
+                    <div class="artist-name">${combinedArtistName}</div>
+
+                    <div class="flex items-center track-click-target ${trackB ? 'cursor-pointer' : ''}" data-track-type="B" data-track-index="${trackIndexB}">
+                        <div class="selection-key">${selectionKeyB}</div>
+                        <div class="track-name-b">${trackNameB}</div>
+                        <div class="selection-spacer"></div>
+                    </div>
+                `;
+
+                const trackAClickable = card.querySelector('[data-track-type="A"]');
+                const trackBClickable = card.querySelector('[data-track-type="B"]');
+
+                const applyHighlightAndQueue = (selectedTrack, selectionKey, artistName) => {
+                    // NOTE: Passing the individual track's artist name to the queue function
+                    const individualArtistName = selectedTrack.artists.map(a => a.name).join(', ');
+                    addTrackToSpotifyQueue(selectedTrack.uri, selectionKey, selectedTrack.name, individualArtistName);
+                    
+                    // Highlighting logic (applies to the entire card strip)
+                    if (lastSelectedStrip) {
+                        lastSelectedStrip.classList.remove('strip-highlight');
+                    }
+                    card.classList.add('strip-highlight');
+                    lastSelectedStrip = card;
+
+                    setTimeout(() => card.classList.remove('strip-highlight'), 2000);
+                };
+
+                if (trackA) {
+                    trackAClickable.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        // We still pass the full track details to the helper function
+                        applyHighlightAndQueue(trackA, selectionKeyA, artistA);
+                    });
+                }
+
+                if (trackB) {
+                    trackBClickable.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        // We still pass the full track details to the helper function
+                        applyHighlightAndQueue(trackB, selectionKeyB, artistB);
+                    });
+                }
+                // --- END MODIFIED ---
+
+                resultsEl.appendChild(card);
+            }
+        };
+
+        // --- Spotify Playback Control (Remote) ---
+
+        /**
+         * Adds a track to the Spotify queue without playing immediately.
+         */
+        const addTrackToSpotifyQueue = async (uri, num, name, artist) => {
+            if (!uri) {
+                showMessage('Cannot queue: Track URI is missing.', true);
+                return;
+            }
+
+            // Immediately add to our visual queue for responsiveness
+            addToQueue(num, name, artist, uri); 
+
+            let endpoint = `/me/player/add-to-queue?uri=${encodeURIComponent(uri)}`;
+            if (activeDeviceId) {
+                endpoint += `&device_id=${activeDeviceId}`;
+            } else {
+                showMessage('Cannot queue: No active Spotify device ID found. Ensure your client is playing.', true);
+                return;
+            }
+
+            const queueAdded = await fetchSpotify(endpoint, 'POST');
+
+            if (!queueAdded) {
+                showMessage('Failed to add to Spotify queue. Is client active?', true);
+                return;
+            }
+
+            showMessage(`Track ${num} (${name}) added to Spotify queue.`);
+
+            const state = await fetchSpotify('/me/player');
+            if (state && (state === true || !state.is_playing)) { 
+                const playAttempt = await fetchSpotify('/me/player/play', 'PUT');
+                if (!playAttempt) {
+                    await fetchSpotify('/me/player/next', 'POST'); 
+                }
+            }
+        };
+
+        /**
+         * Handles the final keyboard selection (00-99) and initiates playback.
+         */
+        const handleKeyboardSelection = (selectionNumber) => {
+            const index = parseInt(selectionNumber, 10);
+
+            if (!currentPlaylistId || trackDetails.length === 0) {
+                showMessage('Please load a playlist first.', true);
+                return;
+            }
+
+            if (isNaN(index) || index < 0 || index >= trackDetails.length || !trackDetails[index]) { 
+                showMessage(`Selection ${selectionNumber} is out of range or empty. Loaded tracks: 00 to ${trackDetails.length - 1}.`, true);
+                return;
+            }
+
+            const trackDetail = trackDetails[index];
+            const trackUri = trackDetail.uri;
+            const trackName = trackDetail.name;
+            const artistName = trackDetail.artist; 
+
+
+            const stripIndex = Math.floor(index / 2);
+            const selectedStrip = select(`[data-strip-index="${stripIndex}"]`);
+
+            if (selectedStrip) {
+                if (lastSelectedStrip) {
+                    lastSelectedStrip.classList.remove('strip-highlight');
+                }
+                selectedStrip.classList.add('strip-highlight');
+                lastSelectedStrip = selectedStrip;
+            }
+
+            addTrackToSpotifyQueue(trackUri, selectionNumber, trackName, artistName); 
+
+
+            setTimeout(() => {
+                keyboardInput = [];
+                updateKeypadDisplay();
+
+                if (lastSelectedStrip) {
+                    setTimeout(() => {
+                        if (lastSelectedStrip) {
+                            lastSelectedStrip.classList.remove('strip-highlight');
+                        }
+                        lastSelectedStrip = null;
+                    }, 2000);
+                }
+
+            }, 500);
+        };
+
+
+        // --- Playback and State Handlers ---
+
+        const togglePlayPause = async (isPaused) => {
+            const endpoint = isPaused ? '/me/player/play' : '/me/player/pause';
+            const success = await fetchSpotify(endpoint, 'PUT');
+            if (success) {
+                showMessage(isPaused ? 'Resumed playback.' : 'Paused.');
+            } else {
+                showMessage('Failed to toggle play/pause. Is your Spotify client open?', true);
+            }
+        };
+
+        const skipToNext = async () => {
+            const success = await fetchSpotify('/me/player/next', 'POST');
+            if (success) showMessage('Skipping to next track.');
+        };
+
+        const skipToPrevious = async () => {
+            const success = await fetchSpotify('/me/player/previous', 'POST');
+            if (success) showMessage('Skipping to previous track.');
+        };
+
+        const setVolume = async (volumePercent) => {
+            await fetchSpotify(`/me/player/volume?volume_percent=${volumePercent}`, 'PUT');
+        };
+
+        const getCurrentPlaybackState = async () => {
+            if (!accessToken) return;
+
+            const state = await fetchSpotify('/me/player');
+            const displayEl = select('#playback-display');
+            const loadingEl = select('#playback-loading');
+
+            if (!state || state === true || !state.item) {
+                displayEl.classList.add('hidden');
+                loadingEl.classList.remove('hidden');
+
+                if (state === true) {
+                    loadingEl.querySelector('p').textContent = 'NO ACTIVE SPOTIFY CLIENT FOUND';
+                } else if (state && state.device) {
+                    loadingEl.querySelector('p').textContent = 'NOT PLAYING';
+                } else {
+                    loadingEl.querySelector('p').textContent = 'NO ACTIVE SPOTIFY CLIENT FOUND';
+                }
+
+                const spinner = loadingEl.querySelector('div');
+                if (spinner) spinner.classList.add('hidden');
+                
+                activeDeviceId = state.device?.id || null; 
+                return;
+            }
+
+            displayEl.classList.remove('hidden');
+            loadingEl.classList.add('hidden');
+
+            const track = state.item;
+            const duration = track.duration_ms;
+            const position = state.progress_ms;
+            const isPaused = !state.is_playing;
+
+            activeDeviceId = state.device?.id || null; 
+
+            select('#play-icon').classList.toggle('hidden', !isPaused);
+            select('#pause-icon').classList.toggle('hidden', isPaused);
+
+            // --- Queue Removal Logic (Optimized) ---
+            const newTrackUri = track.uri;
+            if (newTrackUri !== currentPlayingTrackId) {
+                currentPlayingTrackId = newTrackUri;
+
+                if (queueList.length > 0) {
+                    // Check if the currently playing track is the first track in our queue
+                    if (queueList[0].uri === newTrackUri) {
+                        queueList.shift();
+                        renderQueue();
+                    } 
+                    // Alternatively, find the track in the queue and remove it and all preceding tracks
+                    else {
+                        const matchingIndex = queueList.findIndex(item => item.uri === newTrackUri);
+                        if (matchingIndex > -1) { 
+                            // Remove tracks up to and including the current playing one
+                            queueList.splice(0, matchingIndex + 1); 
+                            renderQueue();
+                        }
+                    }
+                }
+            }
+            // --- End of Queue Removal Logic ---
+
+            select('#track-name').textContent = track.name || 'Unknown Title';
+            select('#artist-name').textContent = track.artists.map(a => a.name).join(', ') || 'Unknown Artist';
+            select('#player-device').textContent = `Device: ${state.device?.name || 'External Client'}`;
+
+            const albumArtUrl = track.album?.images?.[0]?.url || 'https://placehold.co/175x175/000/fff?text=ART';
+            select('#album-art-small').src = albumArtUrl;
+
+            select('#current-time').textContent = formatTime(position);
+            select('#duration').textContent = formatTime(duration);
+
+            const progress = (position / duration) * 100;
+            select('#progress-bar').style.width = `${progress}%`;
+        };
+
+
+        // --- Authorization Flow ---
+
+        const getSpotifyAuthUrl = (client_id) => {
+            const redirectUri = window.location.href.split('#')[0];
+            const url = `https://accounts.spotify.com/authorize`;
+            return `${url}?client_id=${client_id}&response_type=token&redirect_uri=${encodeURIComponent(redirectUri)}&scope=${SPOTIFY_SCOPE}`;
+        };
+
+        const handleAuthCallback = () => {
+            const hash = window.location.hash.substring(1);
+            if (!hash) return false;
+            const params = new URLSearchParams(hash);
+            const token = params.get('access_token');
+            const expiresIn = params.get('expires_in');
+
+            if (token && expiresIn) {
+                const expiryTime = Date.now() + (parseInt(expiresIn, 10) * 1000);
+                localStorage.setItem(TOKEN_STORAGE_KEY, token);
+                localStorage.setItem(TOKEN_EXPIRY_KEY, expiryTime);
+                window.location.hash = '';
+                accessToken = token;
+                return true;
+            }
+            return false;
+        };
+
+        let playbackPollInterval = null;
+        const startPlaybackPolling = () => {
+            if (playbackPollInterval) clearInterval(playbackPollInterval);
+            playbackPollInterval = setInterval(getCurrentPlaybackState, 3000);
+        };
+
+        const initializeApp = () => {
+            if (handleAuthCallback()) {
+                select('#auth-modal').classList.add('hidden');
+                getCurrentPlaybackState();
+                startPlaybackPolling();
+                // Removed fetchSpotifyQueue()
+                showMessage('Jukebox Remote Control Initialized. Load a playlist and ensure a Spotify client is running!');
+                renderQueue(); // Initialize empty queue display for the early return path
+                return;
+            }
+
+            clientId = localStorage.getItem(CLIENT_ID_STORAGE_KEY);
+            accessToken = localStorage.getItem(TOKEN_STORAGE_KEY);
+            const tokenExpiry = localStorage.getItem(TOKEN_EXPIRY_KEY);
+
+            if (clientId && accessToken && tokenExpiry && Date.now() < parseInt(tokenExpiry, 10)) {
+                select('#auth-modal').classList.add('hidden');
+                getCurrentPlaybackState();
+                startPlaybackPolling();
+                // Removed fetchSpotifyQueue()
+                showMessage('Jukebox Remote Control Ready. Load a playlist.');
+            } else {
+                accessToken = null;
+                select('#auth-modal').classList.remove('hidden');
+            }
+            // Initialize empty queue display for all other paths
+            renderQueue(); 
+        };
+
+        // --- Event Listeners and Setup ---
+
+        document.addEventListener('DOMContentLoaded', () => {
+            initializeApp();
+            updateKeypadDisplay();
+
+            // --- Authorization Modal Listeners ---
+            select('#start-auth-btn').addEventListener('click', () => {
+                const inputClientId = select('#client-id-input').value.trim();
+                if (inputClientId) {
+                    localStorage.setItem(CLIENT_ID_STORAGE_KEY, inputClientId);
+                    window.location.href = getSpotifyAuthUrl(inputClientId);
+                } else {
+                    select('#error-message').textContent = 'Please enter a Spotify Client ID.';
+                    select('#error-message').classList.remove('hidden');
+                }
+            });
+
+            // --- Playlist Modal Listeners ---
+            select('#open-playlist-modal-btn').addEventListener('click', () => {
+                if (accessToken) {
+                    select('#playlist-modal').classList.remove('hidden');
+                    select('#playlist-uri-input').focus();
+                } else {
+                    showMessage('Please authorize Spotify first (Client ID required).', true);
+                }
+            });
+            select('#close-playlist-modal-btn').addEventListener('click', () => {
+                select('#playlist-modal').classList.add('hidden');
+            });
+
+            const playlistInput = select('#playlist-uri-input');
+            select('#load-playlist-btn').addEventListener('click', () => loadPlaylistTracks(playlistInput.value));
+            playlistInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') loadPlaylistTracks(playlistInput.value);
+            });
+
+
+            // --- Control Listeners ---
+            select('#play-pause-btn').addEventListener('click', async () => {
+                const currentState = await fetchSpotify('/me/player');
+                if (currentState && currentState !== true) {
+                    togglePlayPause(!currentState.is_playing);
+                } else {
+                    showMessage('Cannot determine playback state. Is Spotify open?', true);
+                }
+            });
+            select('#next-btn').addEventListener('click', skipToNext);
+            select('#prev-btn').addEventListener('click', skipToPrevious);
+
+            // Volume listener
+            const volumeSlider = select('#volume-slider');
+            const volumeLabel = select('#volume-label');
+            volumeSlider.addEventListener('input', () => {
+                const volume = parseInt(volumeSlider.value, 10);
+                volumeLabel.textContent = `${volume}%`;
+                setVolume(volume);
+            });
+
+
+            // --- Keyboard Selection Logic (00-99) ---
+            document.addEventListener('keydown', (e) => {
+                // Prevent number typing if any input is focused
+                const activeEl = document.activeElement;
+                if (activeEl && (activeEl.tagName === 'INPUT' || activeEl.tagName === 'TEXTAREA')) return;
+
+                const digit = parseInt(e.key, 10);
+
+                if (!isNaN(digit) && e.key.length === 1 && select('#auth-modal').classList.contains('hidden') && select('#playlist-modal').classList.contains('hidden')) {
+
+                    if (keyboardInput.length < 2) {
+                        keyboardInput.push(digit);
+                        updateKeypadDisplay();
+                    }
+
+                    if (keyboardInput.length === 2) {
+                        const selectionNumber = keyboardInput[0].toString() + keyboardInput[1].toString();
+                        handleKeyboardSelection(selectionNumber);
+
+                        setTimeout(() => {
+                            keyboardInput = [];
+                            updateKeypadDisplay();
+
+                            if (lastSelectedStrip) {
+                                setTimeout(() => {
+                                    if (lastSelectedStrip) {
+                                        lastSelectedStrip.classList.remove('strip-highlight');
+                                    }
+                                    lastSelectedStrip = null;
+                                }, 2000);
+                            }
+
+                        }, 500);
+                    }
+                }
+
+                // Clear input on Escape or Backspace
+                if (e.key === 'Escape' || e.key === 'Backspace') {
+                    keyboardInput = [];
+                    updateKeypadDisplay();
+                    if(lastSelectedStrip) {
+                        lastSelectedStrip.classList.remove('strip-highlight');
+                        lastSelectedStrip = null;
+                    }
+                }
+            });
+        });
+
+    </script>
+</body>
+</html>
