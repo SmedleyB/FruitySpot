@@ -4,7 +4,7 @@
 <img width="1280" height="720" alt="indieglo" src="https://github.com/user-attachments/assets/6b4e572e-c7b9-4fb2-930f-363043d3bcd1" />
 
 
-FruitySpot is a small client-side web app that uses the Spotify Web API / Web Playback SDK to authorize with Spotify and control local playback from your browser.
+FruitySpot is a small client-side web app that uses the Spotify Web API / Web Playback SDK to authorize with Spotify and control local playback from your browser. It leverages the assets from the Fruitbox v2 JaysIndieglo skin (https://github.com/chundermike/rpi-fruitbox-v2) and tries to recreate some of Fruitbox's functionaility via html while integrating with Spotify to source and stream tracks.
 The migration was done via AI with only very, very minor manual tweaks of the created html. It's probably far from perfect but it works!
 
 Summary
