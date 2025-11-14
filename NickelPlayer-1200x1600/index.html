@@ -386,6 +386,17 @@
 </div>
 
     <script>
+        /*
+         * Nickel Player - Spotify Jukebox Remote Control
+         * 
+         * Authentication: OAuth2 Authorization Code Flow with PKCE
+         * - Uses response_type=code for secure token exchange
+         * - Implements PKCE (Proof Key for Code Exchange) for enhanced security
+         * - Stores access_token, refresh_token, and expiry in localStorage
+         * - Automatically refreshes tokens when expired or near expiration
+         * - Sessions persist across browser restarts
+         */
+        
         const CLIENT_ID_STORAGE_KEY = 'spotify_jukebox_client_id';
         const TOKEN_STORAGE_KEY = 'spotify_jukebox_access_token';
         const REFRESH_TOKEN_STORAGE_KEY = 'spotify_jukebox_refresh_token';
