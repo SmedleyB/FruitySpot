@@ -1,7 +1,8 @@
 # Nickel Player
 
 
-<img width="1920" height="1080" alt="Screenshot 2025-11-14 at 1 25 24 PM" src="https://github.com/user-attachments/assets/0658fe9c-0dd7-4832-80ea-c55c6dc6d181" />
+<img width="1080" height="1920" alt="Screenshot 2025-11-14 at 1 55 16 PM" src="https://github.com/user-attachments/assets/a6ffd81a-3c49-448e-b430-428993353bda" />
+
 
 
 I asked Google Gemini to make a web-based Spotify front end that resembles a classic jukebox and this is what it created and refined over many iterations. I guess Gemini is a vaporwave aestetic fan.
