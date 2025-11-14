@@ -14,7 +14,7 @@ Summary
 Paste your Client ID
 Open `index.html` and replace the CLIENT_ID placeholder with your Spotify Client ID:
 ```js
-const CLIENT_ID = 'YOUR_SPOTIFY_CLIENT_ID_HERE';
+const CLIENT_ID = 'REPLACE_WITH_SPOTIFY_API_CLIENT_ID';
 ```
 
 Prerequisites
