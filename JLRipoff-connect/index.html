@@ -1,0 +1,2037 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=1080,initial-scale=1" />
+  <title>JukeLab Ripoff</title>
+  <link href="https://fonts.googleapis.com/css?family=Roboto+Mono:700" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/daisyui@4.12.2/dist/full.min.css" rel="stylesheet" />
+  <style>
+    :root {
+      --album-bg: #ffe066;
+      --album-fg: #232428;
+      --track-bg: #6fe1f5;
+      --track-fg: #1b262e;
+      --accent: #14b8a6;
+      --main-bg: #000000;
+      --main-fg: #dadada;
+      --header-height: 38px;
+      --footer-height: 60px;
+      --grid-gap: 18px;
+    }
+    html, body { min-width: 1080px; min-height: 100vh; background: var(--main-bg); color: var(--main-fg); font-family: "Roboto Mono", "Consolas", monospace; margin: 0; padding: 0; box-sizing: border-box; height: 100vh; width: 100vw; overflow: hidden;}
+    .header {
+      position: fixed;
+      top: 0; left: 0; width: 100vw;
+      height: var(--header-height);
+      z-index: 100;
+      background: #18191a;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 1.14rem;
+      letter-spacing: 1.5px;
+      padding: 0 30px;
+      border-bottom: 1.5px solid #262b32;
+      min-width: 1080px;
+      user-select: none;
+    }
+    .header span { flex: 1 1 0; text-align: center; }
+
+    #msg {
+      font-weight: 700;
+      font-size: 1.11rem;
+      color: #12ffc8; /* default accent-cyan */
+      background: linear-gradient(96deg, rgba(23,28,29,0.9) 76%, rgba(20,184,166,0.17) 99%);
+      border-radius: 10px;
+      border: 2.5px solid #21ffe7bb;
+      box-shadow: 0 4px 24px #19ffd27c, 0 2px 17px #17e9f765;
+      max-width: 54vw;
+      min-height: 1.8em;
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      z-index: 1200;
+      text-align: center;
+      opacity: 0;
+      pointer-events: none;
+      letter-spacing: 0.02em;
+      padding: 14px 46px;
+      transition: opacity 0.22s, box-shadow 0.22s, border 0.18s;
+    }
+    #msg.error {
+      color: #ff4187;
+      border-color: #ff4187cc;
+      background: linear-gradient(96deg, rgba(42,10,32,.98) 88%, rgba(255,67,123,0.14) 100%);
+      box-shadow: 0 4px 44px #ff418777, 0 2px 21px #ff418743;
+    }
+    .jukebox-app-viewport {
+      position: absolute;
+      left: 0; right: 0;
+      top: var(--header-height);
+      bottom: var(--footer-height);
+      height: calc(100vh - var(--header-height) - var(--footer-height));
+      width: 100vw;
+      min-width: 1080px;
+      min-height: 360px;
+      display: flex;
+      justify-content: center;
+      align-items: stretch;
+      background: linear-gradient(110deg, rgba(16, 22, 34, 0.73) 69%, rgba(44,210,210,0.11) 100%);
+      box-shadow: 0 0 44px 12px #14ffea1c inset;
+      border-radius: 0 0 38px 38px;
+    }
+    /* --- Fancy Main Page Styling from Queue Modal --- */
+    .main-grid-animwrap {
+      width: 100%;
+      height: 100%;
+      position: relative;
+      box-sizing: border-box;
+      padding: 32px 32px;
+      overflow: hidden;
+      /* Fancy gradient background similar to modal */
+      background: linear-gradient(120deg, rgba(18,24,31,0.92) 54%, rgba(52,210,220,0.09) 100%);
+      backdrop-filter: blur(4px);
+    }
+
+    .main-grid {
+      width: 100%;
+      height: 100%;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      grid-template-rows: 1fr 1fr;
+      gap: var(--grid-gap);
+      position: absolute;
+      top: 0; left: 0;
+      z-index: 1;
+      background: linear-gradient(104deg,rgba(28,38,52,0.42) 70%,rgba(46,180,180,0.10) 100%);
+      border-radius: 24px;
+      box-shadow: 0 8px 64px #13ffd22c, 0 1.5px 11px #0fe0ed11;
+      border: 2.5px solid #18eae911;
+      transition: transform 0.48s cubic-bezier(.8,-0.01,.2,1.01);
+      will-change: transform;
+      backface-visibility: hidden;
+    }
+    .main-grid.slide-in-from-right { transform: translateX(100%);}
+    .main-grid.slide-in-from-left { transform: translateX(-100%);}
+    .main-grid.slide-out-to-left { transform: translateX(-100%);}
+    .main-grid.slide-out-to-right { transform: translateX(100%);}
+    .main-grid.show { transform: translateX(0);}
+
+    .album-cell {
+      background: linear-gradient(93deg,rgba(21,44,80,0.58) 65%,rgba(46,180,180,0.14) 100%);
+      border-radius: 16px;
+      border: 2.5px solid #21ffe944;
+      box-shadow: 0 6px 38px #1beebf21, 0 2px 12px #1afdcc11;
+      position: relative;
+      width: 100%;
+      height: 100%;
+      min-width: 0;
+      min-height: 0;
+      box-sizing: border-box;
+      overflow: hidden;
+      display: flex;
+      flex-direction: row;
+      align-items: stretch;
+      margin: 0;
+      padding: 0;
+    }
+    .album-cell:hover,
+    .album-cell:focus-within {
+      border-color: #22ffe7;
+      box-shadow: 0 8px 64px #1beebf45, 0 1.5px 11px #18eee141;
+      background: linear-gradient(93deg,rgba(33,77,140,0.64) 63%,rgba(46,222,220,0.19) 100%);
+      transition: box-shadow 0.21s, border-color 0.21s;
+    }
+
+    .album-list {
+      flex: 1 1 60%;
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      background: linear-gradient(100deg, #242c3a 82%, #21d0d510 100%);
+      border-radius: 16px 0 0 16px;
+      box-shadow: 0 3px 24px #18e9f116;
+      border-right: 2.5px solid #19efe411;
+      color: #f4fcff;
+      padding: 13px 2% 13px 2.8%;
+      box-sizing: border-box;
+      align-items: flex-start;
+      max-width: 46vw;
+      overflow-y: auto;
+      font-size: clamp(0.85rem, 1vw, 1.01rem);
+      height: 100%;
+    }
+    .album-list::-webkit-scrollbar {
+      width: 8px;
+      background: #252b35;
+      border-radius: 7px;
+    }
+    .album-list::-webkit-scrollbar-thumb {
+      background: #39405c;
+      border-radius: 7px;
+    }
+
+    .album-info-header {
+      display:flex;
+      align-items:baseline;
+      gap: 11px;
+      margin-bottom: 3px;
+      margin-top:0;
+    }
+    .albnum {
+      font-size: 1.04em;
+      font-weight: 900;
+      min-width: 2.2em;
+      padding: 5px 16px;
+      background: #151f3ad0;
+      color: #26ffd7;
+      border-radius: 13px;
+      margin-right: 2px;
+      letter-spacing: 0.02em;
+      text-align: center;
+      line-height: 1.18;
+      box-shadow: 0 3px 17px #09feff36, 0 2px 13px #14eae832;
+      border: 2.3px solid #13f3e4;
+      filter: brightness(1.15) saturate(1.1);
+      text-shadow: 0 1.5px 12px #12fff328;
+      display: inline-block;
+      vertical-align: middle;
+    }
+
+    .album-title {
+      color: #30fae4;
+      font-size: 1.11em;
+      font-weight: bold;
+      margin-bottom: 0;
+      margin-top: 0;
+      letter-spacing: 0.03em;
+      word-break: break-word;
+      display: inline-block;
+      line-height: 1;
+      vertical-align: middle;
+      text-shadow: 0 2px 12px #12fffe2a;
+    }
+    .album-artist {
+      color: #13e2e8;
+      font-size: 0.97em;
+      font-weight: normal;
+      margin-top: 1px;
+      margin-bottom: 7px;
+      display: block;
+      margin-left: 1.2em;
+      word-break: break-word;
+      white-space: pre-line;
+      padding-left: 1px;
+      filter: blur(0.18px);
+      text-shadow: 0 2px 10px #1cdbe922;
+    }
+    .track-row {
+      border-left: 3.5px solid #14fbe222;
+      margin-bottom: 6px !important;
+      line-height: 1.22 !important;
+      font-size: 0.97em;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      display: flex;
+      align-items: center;
+      max-width: 100%;
+      padding-left: 7px;
+      background: linear-gradient(97deg,rgba(32,66,94,0.13) 62%,rgba(46,180,180,0.07) 100%);
+      border-radius: 7px 17px 13px 7px;
+      box-shadow: 0 2px 10px #13efd71a;
+    }
+    .tracknum {
+      font-size: 0.80em !important;
+      padding: 3px 13px;
+      margin-right: 8px !important;
+      min-width: 2em;
+      background: #1fa7be;
+      color: #f0fffd;
+      border-radius: 13px;
+      font-weight: 800;
+      box-shadow: 0 2px 7px #21fdc871, 0 1px 8px #2dd8f844;
+      border: 1.7px solid #17f9d4ee;
+      vertical-align: middle;
+      display: inline-block;
+    }
+    .track-title {
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      display: inline-block;
+      vertical-align: middle;
+      max-width: 88%;
+      color: #fafafa;
+      font-weight: 600;
+      letter-spacing: 0.01em;
+      text-shadow: 0 1px 8px #12fffe38;
+    }
+    .album-cov {
+      flex: 0 1 350px;
+      min-width: 100px;
+      width: 35vw;
+      max-width: 440px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: none;
+    }
+    .album-cov img {
+      display: block;
+      width: 96%;
+      height: auto;
+      max-width: 400px;
+      max-height: 90%;
+      aspect-ratio: 1/1;
+      object-fit: contain;
+      border-radius: 12px;
+      border: 2.5px solid #1beebf85;
+      background: #292929;
+      box-shadow: 0 4px 26px #19ffd2b0, 0 2px 18px #27aaff25;
+      animation: artPulse 2.46s cubic-bezier(.7,0,.55,1) infinite alternate;
+      margin: 0 auto;
+    }
+    @keyframes artPulse {
+      from { filter: brightness(1.03); }
+      to   { filter: brightness(1.22) saturate(1.12);}
+    }
+
+    .modal[open] { display: flex; align-items: center; justify-content: center; }
+    .modalbg { background:rgba(0,0,0,0.67); position:fixed; z-index:100; top:0; left:0; right:0; bottom:0; }
+    .modalbox { background: #242629; border-radius: 8px; padding: 2em 2.5em; color: #fff; z-index:102; text-align:center; min-width:300px; }
+    .daisy-btn { margin: 5px 1px 0 1px; }
+    .bottomrow {
+      position: fixed;
+      left: 0; right: 0; bottom: 0;
+      z-index: 20;
+      background: #18191a;
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1vw;
+      height: var(--footer-height);
+      border-top: 1.5px solid #273b3c;
+      box-shadow: 0 -1px 10px #111a3120;
+      padding-top: 0;
+      padding-bottom: 0;
+      min-height: 48px;
+    }
+    .playpanel {
+      display: flex;
+      flex-direction: row;
+      gap: 0.5em;
+      align-items: center;
+      min-width: 134px;
+      margin-left: 14px;
+    }
+    .playbtn {
+      width: 38px;
+      height: 38px;
+      min-width: 38px;
+      min-height: 38px;
+      max-width: 38px;
+      max-height: 38px;
+      margin: 0 2.8px;
+      border-radius: 6px;
+      background: #232a29;
+      color: var(--accent);
+      border: none;
+      outline: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.19em;
+      transition: background 0.16s, color 0.13s, box-shadow 0.19s;
+      box-shadow: 0 2px 7px #14b8a617;
+      cursor: pointer;
+    }
+    .playbtn:hover { background: var(--accent); color:#fff; }
+    .pause .icon { margin-left: 1px; }
+    .icon { pointer-events: none; }
+    .keypad {
+      flex: 1 1 auto;
+      min-width: 400px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 6px;
+      margin-bottom: 0;
+    }
+    .keypad-btn {
+      font-size: 1.14rem;
+      background: #282a2c;
+      color: #fff;
+      border: none;
+      width: 38px; height: 38px;
+      margin: 0 2.8px;
+      border-radius: 6px;
+      text-align: center;
+      transition: background 0.15s, box-shadow 0.12s;
+      cursor: pointer;
+      font-family: inherit;
+      box-shadow: 0 2px 8px #111a3222;
+    }
+    .keypad-btn:active, .keypad-btn.selected {
+      background: #4f4f51;
+      box-shadow: 0 2px 13px #19382d28;
+    }
+    .cornerpanel {
+      display: flex;
+      flex-direction: row;
+      align-items: end;
+      gap: 7px;
+      margin-right: 16px;
+    }
+    .cornerpanel .btn {
+      min-width: 70px;
+      min-height: 32px;
+      padding: 7px 22px;
+      font-size: 1em;
+      border-radius: 10px;
+      border: 2px solid var(--accent);
+      background: linear-gradient(100deg, #181f1f 70%, #0fc2b11a 100%);
+      color: var(--accent);
+      font-weight: 800;
+      box-shadow: 0 3px 13px #12fff388, 0 2px 13px #14eae822;
+      letter-spacing: 0.01em;
+      transition: 
+        background 0.16s,
+        color 0.13s, 
+        border-color 0.18s,
+        box-shadow 0.22s;
+    }
+    .cornerpanel .btn:active,
+    .cornerpanel .btn.selected,
+    .cornerpanel .btn:hover {
+      background: var(--accent);
+      color: #fff;
+      border-color: #21ffe7;
+      box-shadow: 0 4px 38px #1beebf88, 0 2px 14px #18eee144;
+      filter: brightness(1.15) saturate(1.07);
+    }
+    .cornerpanel .btn-info { border:1.3px solid #36bdf8; color:#38bdf8;}
+    .cornerpanel .btn-error { border:1.3px solid #f43f5e; color:#f43f5e;}
+    .cornerpanel .btn-success { border:1.3px solid #22d3ee; color:#22d3ee;}
+    .modalbox .btn { font-size:1em; }
+    .keypad-btn:focus:not(:focus-visible),
+    .playbtn:focus:not(:focus-visible),
+    .cornerpanel .btn:focus:not(:focus-visible) {
+      outline: none;
+      box-shadow: none;
+    }
+
+    /* ==== FANCY QUEUE MODAL styles ==== */
+    #queue-scroll-modal {
+      display: none;
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      z-index: 10999;
+      background: linear-gradient(135deg, rgba(18,24,31,0.98) 60%, rgba(52,210,220,0.12) 100%);
+      animation: fadeInBG 0.7s cubic-bezier(.7,0,.7,1);
+      backdrop-filter: blur(6px);
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      user-select: none;
+      cursor: pointer;
+      overflow: hidden;
+    }
+    @keyframes fadeInBG {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+    #queue-scroll-list {
+      width: 95vw;
+      max-width: 700px;
+      height: 82vh;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      position: relative;
+      box-shadow: 0 8px 96px #1beebf1f;
+      border-radius: 24px;
+      background: rgba(16,22,26,0.83);
+      padding: 0;
+      border: 2px solid #11b8ae33;
+      transition: box-shadow 0.38s cubic-bezier(.7,0,.6,1);
+      animation: queuePopIn 0.45s cubic-bezier(.3,1.21,.16,1.01);
+    }
+    @keyframes queuePopIn {
+      0%{ opacity:0; transform: scale(1.18) translateY(32px);}
+      95%{opacity:1; transform: scale(1.01) translateY(-6px);}
+      100%{opacity:1; transform: scale(1) translateY(0);}
+    }
+    .queue-scroll-scrollview {
+      padding-top: 48px; /* Tweak based on .queue-scroll-title-bar's exact height */
+      flex: 1 1 0;
+      min-height: 0;
+      width: 100%;
+      overflow: hidden;
+      background: none;
+    }
+    .queue-scroll-title-bar {
+      position: absolute;
+      height: 82px; 
+      top: 0;
+      left: 0;
+      width: 100%;
+      z-index: 11;
+      font-size: 2em;
+      color: #17fddf;
+      padding: 20px 0 8px 0;
+      text-align: center;
+      font-weight: 900;
+      letter-spacing: 0.09em;
+      text-shadow: 0 5px 36px #13c8c844;
+      pointer-events: none;
+       /*  border-radius: 24px 24px 0 0; */
+      background: linear-gradient(180deg, #181f1fef 65%, #12192410 100%);
+      border-bottom: 3px solid #1beebf88;
+      box-shadow: 0 8px 28px #14ffd224, 0 4px 18px #19ffe02f;
+      backdrop-filter: blur(3.5px);
+      -webkit-backdrop-filter: blur(3.5px);
+    }
+    .queue-scroll-item {
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      gap: 25px;
+      width: 100%;
+      max-width: 100%;
+      padding: 14px 24px 14px 20px;
+      font-size: 1.07em;
+      color: #f5f5f5;
+      border-radius: 17px;
+      box-sizing: border-box;
+      position: relative;
+      opacity: 0;
+      transform: translateY(35px) scale(1.08) skewY(2deg);
+      animation: itemFadeUp 0.69s cubic-bezier(.57,1.5,.35,.96) forwards;
+      animation-delay: var(--del, 0s);
+      /* margin-bottom: 7px; */
+      border: 1.2px solid #32e7fc25;
+      background: linear-gradient(93deg,rgba(21,44,80,0.36) 70%,rgba(46,180,180,0.13) 100%);
+      box-shadow: 0 5px 24px #1afdcc0d;
+      will-change: opacity,transform;
+    }
+    @keyframes itemFadeUp {
+      from { opacity: 0; transform: translateY(45px) scale(.96) skewY(2deg); }
+      65%  { opacity: 1; transform: translateY(-6px) scale(1.01) skewY(0.4deg);}
+      to   { opacity: 1; transform: translateY(0) scale(1) skewY(0);}
+    }
+    .queue-scroll-item.now-playing {
+      border:2.6px solid #16ffc5e8;
+      background: linear-gradient(
+        88deg, #10d7ae70 25%, #18e7e038 65%, rgba(19,29,52,0.61) 100%);
+      box-shadow: 0 1px 35px #15eaca88;
+      filter: brightness(1.13) saturate(1.06);
+      color: #fff !important;
+      animation: itemPulseHighlight 2.6s ease-in-out infinite alternate;
+      z-index: 5;
+    }
+    @keyframes itemPulseHighlight {
+      from { box-shadow: 0 1px 39px #15eaca31, 0 8px 80px #13be8b23; }
+      to   { box-shadow: 0 1px 51px #05f5c9c8, 0 8px 120px #12ffc015;}
+    }
+    .queue-scroll-art {
+      width: 74px;
+      height: 74px;
+      min-width: 74px;
+      min-height: 74px;
+      border-radius: 9px;
+      background: #25282c;
+      object-fit: cover;
+      border: 2.1px solid #2b6560;
+      box-shadow: 0 4px 22px #13ffd336, 0 2px 24px #27aaff18;
+      animation: artPulse 2.46s cubic-bezier(.7,0,.55,1) infinite alternate;
+    }
+    .queue-scroll-details {
+      flex:1; display:flex; flex-direction:column; min-width:0; overflow:hidden; padding-top:7px;
+    }
+    .queue-scroll-title {
+      font-weight: 900; color: #fafafa; letter-spacing: 0.01em; margin-bottom: 2px;
+      text-shadow: 0 2px 12px #12fffe38; font-size: 1.12em; line-height: 1.23;
+      white-space: nowrap; text-overflow: ellipsis; overflow: hidden;
+    }
+    .queue-scroll-artist {
+      font-weight: 400; color: #13e2e8; text-shadow: 0 2px 10px #1cdbe922;
+      margin-bottom: 2px; font-size: 1em; white-space: nowrap; text-overflow: ellipsis; overflow: hidden;
+    }
+    .queue-scroll-album {
+      color: #30fae4; font-size: 0.92em; opacity: 0.94; white-space: nowrap;
+      text-overflow: ellipsis; overflow: hidden; font-weight: 400; filter: blur(0.4px);
+    }
+    .queue-count-badge {
+      position: absolute; right: 38px; top: 10px; background: #151f3cc7; color:#15ffd4;
+      padding: 6px 15px; border-radius: 70px; font-size: 1.05em; font-weight: 700; letter-spacing: 0.06em;
+      box-shadow: 0 3px 17px #09feff1d; border:2.5px solid #13e6be;
+    }
+    .queue-scroll-items-container {
+      display: block;
+      width: 100%;
+      height: 100%;
+      transition: transform 1.14s cubic-bezier(.84,0,.25,1.06);
+      will-change: transform;
+      backface-visibility: hidden;
+      padding: 0;
+      margin: 0;
+      box-sizing: border-box;
+      background: none;
+    }
+    .queue-empty-message {
+      margin-top: 48px; /* or what looks good */
+      font-size: 2.1em;
+      color: #fff8;
+      text-align: center;
+    }
+    #queue-scroll-modal::before, #queue-scroll-modal::after {
+      content: '';
+      position: absolute;
+      left:0; right:0;
+      height: 10vh;
+      pointer-events: none;
+      z-index: 30;
+    }
+    #queue-scroll-modal::before {
+      top:0;
+      background: linear-gradient(180deg,rgba(20,32,42,0.95) 63%,transparent 100%);
+    }
+    #queue-scroll-modal::after {
+      bottom:0;
+      background: linear-gradient(0deg,rgba(20,32,42,0.96) 75%,transparent 100%);
+    }
+    .queue-scroll-item.now-playing .queue-scroll-album {
+      /* Pulse like the card! */
+      color: #3ffede;
+      opacity: 0.98;
+      filter: blur(0px);
+      font-weight: 700;
+      text-shadow: 0 2px 13px #32ffe788, 0 1px 8px #17ffef56;
+      animation: itemPulseHighlight 2.6s ease-in-out infinite alternate;
+    }
+    .queue-scroll-exit-hint {
+      position:absolute; bottom: 3.5vh; width:100%; text-align:center;
+      font-size:1.13em; color:#97fff8cc; letter-spacing:0.07em; user-select:none; z-index:100;
+      text-shadow:0 2px 12px #33f0ff81; pointer-events:none; animation: exitPulse 2.5s cubic-bezier(.5,0,.5,1) infinite;
+    }
+    @keyframes exitPulse {
+      0% { opacity: 0.80; transform: scale(1.01);}
+      70% { opacity: 1; transform: scale(1.06); }
+      100% { opacity: 0.90; transform: scale(1.01);}
+    }
+    @media (max-width: 820px) {
+      #queue-scroll-list { max-width:98vw; }
+      .queue-scroll-item { font-size:1em; }
+      .queue-scroll-title-bar { font-size: 1.13em;}
+      .queue-scroll-art { width: 58px; height:58px;}
+      .queue-count-badge { right: 18px; top: 9px; font-size:.97em;}
+      .jukebox-app-viewport {
+        min-width: 0;
+        border-radius: 0;
+        padding: 0 2vw;
+      }
+    }
+
+    @keyframes queueMarqueeY {
+      0% { transform: translateY(0);}
+      100% { transform: translateY(-50%);}
+    }
+    .queue-scroll-items-container.marquee {
+      animation: queueMarqueeY linear infinite;
+      animation-duration: var(--marquee-duration, 20s);
+      will-change: transform;
+    }
+    #queue-scroll-modal,
+    #queue-scroll-modal * {
+      cursor: none !important;
+    }
+    #playlist-list .playlist-choice,
+    #device-list .playlist-choice {
+    display: block;
+    margin: 5px auto;
+    background: linear-gradient(90deg, #232a39 60%, #17ffd220 100%);
+    color: #18ffd8;
+    font-weight: 600;
+    border: 2px solid #16fed7dd;
+    border-radius: 10px;
+    width: 100%;
+    padding: 10px 8px 8px 8px;
+    cursor: pointer;
+    letter-spacing: 0.03em;
+    font-size: 1.08em;
+    box-shadow: 0 3px 14px #1beebf24;
+    transition: background 0.18s, color 0.14s, border 0.18s, box-shadow 0.23s;
+    box-sizing: border-box;
+    text-align: left;    /* Optional: for better readability if names are long */
+  }
+  #playlist-list .playlist-choice:hover, #playlist-list .playlist-choice:focus,
+  #device-list .playlist-choice:hover {
+    background: #19ffe4;
+    color: #021510;
+    border-color: #16ffe7;
+    box-shadow: 0 5px 22px #1beebf44;
+  }
+  #playlist-loading {
+    display:block;
+    margin:20px auto;
+  }
+  #playlist-modal .modalbox, #device-modal .modalbox {
+    max-width: 700px;
+    width: 95vw;
+    min-width: 340px;
+    border-radius: 24px;
+    box-shadow: 0 8px 96px #1beebf1f;
+    background: rgba(16,22,26,0.92);
+    border: 2px solid #11b8ae33;
+    padding: 2rem 2.5rem;
+  }
+  #playlist-modal .btn-accent {
+    min-width: 100px;
+    min-height: 36px;
+    padding: 7px 22px;
+    font-size: 1em;
+    border-radius: 10px;
+    border: 2px solid var(--accent);
+    background: linear-gradient(100deg, #181f1f 70%, #14b8a610 100%);
+    color: var(--accent);
+    font-weight: 800;
+    box-shadow: 0 3px 13px #12fff388, 0 2px 13px #14eae822;
+    letter-spacing: 0.01em;
+    transition: background 0.16s, color 0.13s, border-color 0.18s, box-shadow 0.22s;
+  }
+  #playlist-modal .btn-accent:hover, #playlist-modal .btn-accent.selected {
+      background: var(--accent);
+      color: #fff;
+      border-color: #21ffe7;
+      box-shadow: 0 4px 38px #1beebf88, 0 2px 14px #18eee144;
+      filter: brightness(1.15) saturate(1.07);
+  }
+  #playlist-url {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+    margin-bottom: 8px;
+    font-size: 1.05em;
+  }
+  .queue-scroll-item.not-in-set {
+    background: linear-gradient(88deg, #3b2c4b 65%, #7e57c214 100%) !important;
+    border: 2.6px dashed #6d6e8c !important;
+    color: #c6bfff !important;
+    box-shadow: 0 1px 35px #8e5eea33, 0 8px 80px #48217533;
+    filter: brightness(1.09) saturate(1.03);
+    position: relative;
+  }
+  .queue-scroll-item.not-in-set .queue-scroll-title::after {
+    content: " (not in loaded set)";
+    color: #ef8ef8;
+    font-size: 0.69em;
+    margin-left: 8px;
+    font-weight: 400;
+    text-shadow: none;
+    vertical-align: super;
+  }
+  #choosedevice {
+    box-shadow: 0 3px 13px #12fff388, 0 2px 13px #14eae822;
+    border: 2px solid var(--accent);
+    border-radius: 10px;
+    transition: box-shadow 0.16s, background 0.18s, color 0.15s, border 0.18s;
+  }
+  #choosedevice:hover,
+  #choosedevice:focus {
+    background: var(--accent);
+    color: #fff;
+    border-color: #21ffe7;
+    box-shadow: 0 4px 38px #1beebf88, 0 2px 14px #18eee144;
+    filter: brightness(1.12) saturate(1.07);
+  }
+  .active-device {
+    background: linear-gradient(95deg,#19ffe4 60%,#232a39 100%) !important;
+    color: #021510 !important;
+    border-color: #21ffe7 !important;
+    font-weight: bold;
+    box-shadow: 0 2px 20px #19ffe458;
+  }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <span style="text-align:left;">SELECT: <span id="selectcode">____</span></span>
+    <span>PLAYING: <span id="playingcode">____</span></span>
+    <span style="text-align:right;">QUEUED: <span id="queuecount">00</span></span>
+  </div>
+  <div id="msg" aria-live="polite"></div>
+  <main class="jukebox-app-viewport" id="main">
+    <div class="main-grid-animwrap" id="main-grid-animwrap"></div>
+  </main>
+  <!-- Playlist Modal -->
+  <dialog id="playlist-modal" class="modal" role="dialog" aria-modal="true">
+    <div class="modalbg"></div>
+    <form method="dialog" class="modalbox flex flex-col items-center">
+      <h3 class="font-bold text-lg mb-3">Paste Spotify Playlist URL</h3>
+      <input id="playlist-url" autofocus class="input input-bordered daisy-input mb-2" placeholder="https://open.spotify.com/playlist/xxxxx" />
+      <div class="my-3 font-semibold text-[#19ffe4dd]">or choose one of your playlists:</div>
+      <div id="playlist-picker" style="min-width:320px;min-height:54px;text-align:center;">
+        <span id="playlist-loading" style="color:#18e7ff;font-size:1.03em;display:none;"><span class="loading loading-spinner loading-md align-middle"></span> Loading playlists...</span>
+        <div id="playlist-list"></div>
+        <div id="playlist-pagination" style="margin-top:10px;display:none;">
+          <button type="button" id="playlist-prev" class="btn btn-xs btn-outline" style="margin-right:8px;">Previous</button>
+          <span id="playlist-pageinfo" style="font-size:0.97em;color:#a3fff4;"></span>
+          <button type="button" id="playlist-next" class="btn btn-xs btn-outline" style="margin-left:8px;">Next</button>
+        </div>
+      </div>
+      <div class="modal-action">
+        <button id="playlist-ok" class="btn btn-accent daisy-btn" type="submit">Load</button>
+        <button type="button" class="btn btn-accent daisy-btn" id="playlist-cancel">Cancel</button>
+      </div>
+    </form>
+  </dialog>
+  <!-- Queue Modal -->
+  <div id="queue-scroll-modal" role="dialog" aria-modal="true" tabindex="-1">
+    <div id="queue-scroll-list" style="position:relative;">
+      <div class="queue-scroll-title-bar">
+        <span>SONGS IN QUEUE</span>
+        <span id="queue-badge" class="queue-count-badge">00</span>
+      </div>
+      <div class="queue-scroll-scrollview">
+        <div class="queue-scroll-items-container"></div>
+      </div>
+    </div>
+    <div class="queue-scroll-exit-hint">Tap or press any key to return</div>
+  </div>
+  <!-- Device Select Modal -->
+  <dialog id="device-modal" class="modal" role="dialog" aria-modal="true" style="z-index:10500;">
+    <div class="modalbg"></div>
+    <form method="dialog" class="modalbox flex flex-col items-center">
+      <h3 class="font-bold text-lg mb-3" style="color:#19ffe4;">Choose Playback Device</h3>
+      <div id="device-list" style="min-width:320px;min-height:54px;width:95%;text-align:center;"></div>
+      <div class="modal-action mt-6">
+        <button type="button" class="btn btn-accent daisy-btn" id="device-cancel">Cancel</button>
+      </div>
+      <div id="device-help" class="mt-4 text-[#27fdee] text-base text-center max-w-xs" style="display:none;">
+        No available devices detected.<br>
+        <b>Tip:</b> Open Spotify on your phone, PC, or tablet, and play something to activate it.
+      </div>
+    </form>
+  </dialog>
+  <!-- Bottom Row -->
+  <div class="bottomrow" id="bottomrow">
+    <div class="playpanel" id="playpanel">
+      <button class="playbtn prev" id="btn-prev" title="Previous" aria-label="Previous">
+        <svg class="icon" width="19" height="19" fill="currentColor" viewBox="0 0 20 20"><path d="M7.5 15.5V4.5a1 1 0 0 1 2 0v3.9l7.51-4.63a1 1 0 0 1 1.49.87v13.52a1 1 0 0 1-1.49.86L9.5 11.6v3.9a1 1 0 0 1-2 0z"/></svg>
+      </button>
+      <button class="playbtn pause" id="btn-play" title="Play / Pause" aria-label="Play or Pause">
+        <svg class="icon" width="21" height="21" fill="currentColor" viewBox="0 0 20 20">
+          <rect x="4" y="4" width="4" height="12" rx="2"/>
+          <rect x="12" y="4" width="4" height="12" rx="2"/>
+        </svg>
+      </button>
+      <button class="playbtn next" id="btn-next" title="Next" aria-label="Next">
+        <svg class="icon" width="19" height="19" fill="currentColor" viewBox="0 0 20 20"><path d="M12.5 4.5v3.9l-7.51-4.62A1 1 0 0 0 3.5 4.65v13.53a1 1 0 0 0 1.49.87l7.51-4.63v3.9a1 1 0 0 0 2 0V4.5a1 1 0 0 0-2 0z"/></svg>
+      </button>
+    </div>
+    <div class="keypad" id="keypad" style="display:flex;">
+      <button class="keypad-btn" data-key="<">&lt;</button>
+      <button class="keypad-btn" data-key="0">0</button>
+      <button class="keypad-btn" data-key="1">1</button>
+      <button class="keypad-btn" data-key="2">2</button>
+      <button class="keypad-btn" data-key="3">3</button>
+      <button class="keypad-btn" data-key="4">4</button>
+      <button class="keypad-btn" data-key="5">5</button>
+      <button class="keypad-btn" data-key="6">6</button>
+      <button class="keypad-btn" data-key="7">7</button>
+      <button class="keypad-btn" data-key="8">8</button>
+      <button class="keypad-btn" data-key="9">9</button>
+      <button class="keypad-btn" data-key="X">&#10006;</button>
+      <button class="keypad-btn" data-key=">">&gt;</button>
+    </div>
+    <div class="cornerpanel" id="cornerpanel">
+      <button id="login" class="btn btn-success daisy-btn">Login</button>
+      <button id="logout" class="btn btn-accent daisy-btn" style="display:none;">Logout</button>
+      <button id="chooseplaylist" class="btn btn-accent daisy-btn" style="display:none;">Playlist</button>
+      <button id="choosedevice" class="btn btn-accent daisy-btn" style="display:none;">Device</button>
+    </div>
+  </div>
+  <script>
+    // ---- GLOBALS & STATE ----
+    const INACTIVITY_MS = 45000;
+    const QUEUE_PAUSE_MS = 5000; // pause in ms before each scroll
+    let inactivityTimer = null;
+    let queueScrollActive = false;
+    const clientId = "REPLACE_WITH_SPOTIFY_API_CLIENT_ID";
+    const redirectUri = "http://localhost:8000/";
+    let token = null, refreshToken = null, expiresIn = null, tokenExp = null;
+    let selectedDeviceId = null, selectedDeviceName = null;
+    let deviceList = [];
+    let clearMsgTimer = null;
+    let albums = [], currentPage = 0, keypadDigits = "";
+    let playlistId = null;
+    let trackIdxMap = {};
+    let currentPlayingUri = null;
+    let trackMap = {}; // FAST lookup map
+    let queueScrollTimeout = null;
+    let lastScroll = { onEnd: null, running: false };
+    let lastCurrentPlayingItem = null;
+    // --- Playlist Modal Pagination ---
+    let mySpotifyPlaylists = [];
+    let playlistPageSize = 8;
+    let playlistCurrentPage = 0;
+    let trackQueue = [];
+    let deviceModalTimer = null;
+    let lastPolledPlayingUri = null; // Global variable
+
+    // ==== Utility: Ensure token is fresh before API call ====
+    async function checkAndRefreshTokenIfExpiring() {
+      // Refresh token if less than 60s to expiry
+      if (!tokenExp || !token) return;
+      if ((tokenExp - Date.now()) < 60000) { // 1 min grace period
+        await refreshAccessToken();
+      }
+    }
+
+    // ==== Device modal logic - IMPROVED: adds periodic polling ====
+    function showDeviceModal(devices) {
+      const list = document.getElementById("device-list");
+      const modal = document.getElementById("device-modal");
+      const help = document.getElementById("device-help");
+      list.innerHTML = "";
+      help.style.display = (devices && devices.length) ? "none" : "block";
+      // --- ADD THIS BLOCK:
+      if (!selectedDeviceId && devices && devices.length) {
+        const activeDev = devices.find(d => d.is_active);
+        if (activeDev) selectedDeviceId = activeDev.id;
+      }
+      if (devices && devices.length) {
+        devices.forEach(dev => {
+          const b = document.createElement("button");
+          b.type = "button";
+          b.className = "playlist-choice";
+          if (dev.id === selectedDeviceId) b.classList.add("active-device");
+          b.textContent = dev.name + " (" + dev.type + (dev.is_active ? ", active" : "")
+            + (dev.is_restricted ? ", restricted" : "") + ")";
+          if (dev.is_restricted) {
+            b.disabled = true;
+            b.title = "This device is restricted and cannot be controlled by queue/skip commands.";
+            b.style.opacity = 0.5;
+          } else {
+            b.onclick = async () => {
+              await selectDevice(dev.id, dev.name);
+              modal.close();
+              stopDeviceModalTimer();
+            };
+          }
+          list.appendChild(b);
+        });
+      }
+      modal.showModal();
+      document.activeElement && document.activeElement.blur();
+      if (!devices.length) startDeviceModalTimer();
+      else stopDeviceModalTimer();
+    }
+
+    function startDeviceModalTimer() {
+      stopDeviceModalTimer();
+      deviceModalTimer = setInterval(async () => {
+        const updated = await fetchDevices();
+        if (updated.length) {
+          showDeviceModal(updated); // This will cancel timer if needed
+        }
+      }, 3000); // Poll every 3 seconds if no devices
+    }
+    function stopDeviceModalTimer() {
+      if (deviceModalTimer) clearInterval(deviceModalTimer);
+      deviceModalTimer = null;
+    }
+
+    async function fetchDevices() {
+      await checkAndRefreshTokenIfExpiring();
+      try {
+        const resp = await fetch("https://api.spotify.com/v1/me/player/devices", { headers: { Authorization: "Bearer " + token } });
+        if (resp.ok) {
+          const data = await resp.json();
+          return data.devices || [];
+        }
+      } catch (e) {}
+      return [];
+    }
+    async function queryAndShowDevices() {
+      const devices = await fetchDevices();
+      deviceList = devices;
+      showDeviceModal(devices);
+    }
+    async function transferPlaybackToDevice(deviceId) {
+      if (!token) return;
+      await checkAndRefreshTokenIfExpiring();
+      await fetch('https://api.spotify.com/v1/me/player', {
+        method: 'PUT',
+        headers: {
+          'Authorization': 'Bearer ' + token,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          device_ids: [deviceId],
+          play: true
+        })
+      });
+    }
+    async function selectDevice(id, name) {
+      selectedDeviceId = id;
+      selectedDeviceName = name;
+      logMsg(`Selected device: <b>${name}</b>`, false, true);
+      const btn = document.getElementById('choosedevice');
+      if (btn) {
+        btn.title = "Current: " + name;
+        // btn.textContent = name.length > 18 ? "Device" : name;
+      }
+      await transferPlaybackToDevice(id); // <-- Make sure to await this
+    }
+    // --- Handler to open the device modal ---
+    document.getElementById("choosedevice").onclick = () => {
+      queryAndShowDevices();
+    };
+    document.getElementById("device-cancel").onclick = ()=>{
+      document.getElementById("device-modal").close();
+      stopDeviceModalTimer();
+    };
+
+    async function ensureDeviceSelected(retry = 2) {
+      if (!token) return false;
+      await checkAndRefreshTokenIfExpiring();
+      let devices = await fetchDevices();
+      if (!devices.length && retry > 0) {
+        await new Promise(res => setTimeout(res, 1800));
+        return ensureDeviceSelected(retry - 1);
+      }
+      let dev = devices.find(d => d.is_active && !d.is_restricted);
+      if (!dev) dev = devices.find(d => !d.is_restricted);
+      if (!dev) {
+        queryAndShowDevices();
+        return false;
+      }
+      selectedDeviceId = dev.id;
+      selectedDeviceName = dev.name;
+      const devBtn = document.getElementById('choosedevice');
+      if (devBtn) devBtn.title = "Current: " + dev.name;
+      return true;
+    }
+    function updatePlayButton(isPlaying) {
+      const btn = document.getElementById('btn-play');
+      if (!btn) return;
+      btn.innerHTML = isPlaying
+        // Pause icon
+        ? `<svg class="icon" width="21" height="21" fill="currentColor" viewBox="0 0 20 20">
+            <rect x="4" y="4" width="4" height="12" rx="2"/>
+            <rect x="12" y="4" width="4" height="12" rx="2"/>
+          </svg>`
+        // Play icon (standard right-point triangle)
+        : `<svg class="icon" width="21" height="21" fill="currentColor" viewBox="0 0 20 20">
+             <polygon points="5,4 17,10 5,16" />
+          </svg>`;
+      btn.setAttribute('aria-label', isPlaying ? "Pause" : "Play");
+    }
+    // ========== SPOTIFY CONNECT PLAYBACK FUNCTIONS - IMPROVED ERROR HANDLING ==========
+    async function playTrackOnDevice(uri) {
+      if (!selectedDeviceId) {
+        if (!await ensureDeviceSelected()) {
+          logMsg("No active device! Open Spotify app and make sure it's running.", true, false);
+          return;
+        }
+      }
+      await checkAndRefreshTokenIfExpiring();
+      let resp;
+      try {
+        resp = await fetch("https://api.spotify.com/v1/me/player/play?device_id=" + selectedDeviceId, {
+          method: "PUT",
+          headers: { Authorization: "Bearer " + token, "Content-Type": "application/x-www-form-urlencoded" },
+          body: JSON.stringify({ uris: [uri] })
+        });
+      } catch (e) {
+        logMsg("Network error during play request.", true, false);
+        return;
+      }
+      if (!resp.ok) {
+        let msg = `Failed to play on <b>${selectedDeviceName||'device'}</b>`;
+        try { 
+          const err = await resp.json();
+          if (err && err.error && err.error.message) msg += ": " + err.error.message;
+        } catch {}
+        logMsg(msg, true, false);
+        if (resp.status === 404 || resp.status === 403) queryAndShowDevices();
+        return;
+      } else {
+        logMsg(`Playing on <b>${selectedDeviceName}</b>`, false, false);
+      }
+    }
+    async function playPauseToggle() {
+      if (!selectedDeviceId) {
+        if (!await ensureDeviceSelected()) return;
+      }
+      await checkAndRefreshTokenIfExpiring();
+      let resp;
+      try {
+        resp = await fetch("https://api.spotify.com/v1/me/player?device_id=" + selectedDeviceId, {
+          headers: { Authorization: "Bearer " + token }
+        });
+        if (resp.ok) {
+          const body = await resp.json();
+          let op_ok = true;
+          let action = "";
+          if (body.is_playing) {
+            action = "pause";
+            let pauseresp = await fetch("https://api.spotify.com/v1/me/player/pause?device_id="+selectedDeviceId, {method:"PUT",headers:{Authorization: "Bearer " + token}});
+            op_ok = pauseresp.ok;
+            if (!pauseresp.ok) {
+              let msg = "Pause failed";
+              try { const err = await pauseresp.json(); if (err?.error?.message) msg += ": " + err.error.message; } catch{}
+              logMsg(msg, true, false); return;
+            }
+          } else {
+            action = "play";
+            let playresp = await fetch("https://api.spotify.com/v1/me/player/play?device_id="+selectedDeviceId, {method:"PUT",headers:{Authorization: "Bearer " + token}});
+            op_ok = playresp.ok;
+            if (!playresp.ok) {
+              let msg = "Play failed";
+              try { const err = await playresp.json(); if (err?.error?.message) msg += ": " + err.error.message; } catch{}
+              logMsg(msg, true, false); return;
+            }
+          }
+          if (op_ok) logMsg(`${action === "pause" ? "Paused" : "Playing"} on <b>${selectedDeviceName}</b>`, false, false);
+          updatePlayButton(action !== "pause");
+        }
+      } catch(e) {
+        logMsg("Could not toggle playback: network or API error.", true, false);
+      }
+    }
+    async function nextTrack() {
+      if (!selectedDeviceId) { if (!await ensureDeviceSelected()) return; }
+      await checkAndRefreshTokenIfExpiring();
+      let resp = await fetch("https://api.spotify.com/v1/me/player/next?device_id="+selectedDeviceId, {method:"POST",headers:{Authorization: "Bearer " + token}});
+      if (!resp.ok) {
+        let msg = "Failed to skip track";
+        try { const err = await resp.json(); if (err?.error?.message) msg += ": " + err.error.message; } catch{}
+        logMsg(msg, true, false);
+      } else {
+        logMsg(`Skipped to next track on <b>${selectedDeviceName}</b>`)
+      }
+    }
+    async function prevTrack() {
+      if (!selectedDeviceId) { if (!await ensureDeviceSelected()) return; }
+      await checkAndRefreshTokenIfExpiring();
+      let resp = await fetch("https://api.spotify.com/v1/me/player/previous?device_id="+selectedDeviceId, {method:"POST",headers:{Authorization: "Bearer " + token}});
+      if (!resp.ok) {
+        let msg = "Failed to go to previous track";
+        try { const err = await resp.json(); if (err?.error?.message) msg += ": " + err.error.message; } catch{}
+        logMsg(msg, true, false);
+      } else {
+        logMsg(`Previous track on <b>${selectedDeviceName}</b>`);
+      }
+    }
+    async function addToQueueConnect(trackUri, albumDetails, trackDetails) {
+      if (!selectedDeviceId) { if (!await ensureDeviceSelected()) return; }
+      await checkAndRefreshTokenIfExpiring();
+
+      if (trackQueue.length >= 95) {
+        logMsg("Queue limit nearly reached (Spotify allows 100 max). Song not queued.", true, false);
+        return;
+      }
+      let resp = await fetch("https://api.spotify.com/v1/me/player/queue?uri="+encodeURIComponent(trackUri)+"&device_id="+selectedDeviceId,{
+        method:"POST",headers: {Authorization:"Bearer "+token}});
+      if (!resp.ok) {
+        let msg = "Failed to queue";
+        try { const err = await resp.json(); if (err?.error?.message) msg += ": " + err.error.message; } catch{}
+        logMsg(msg, true, false);
+        if (resp.status === 404 || resp.status === 403) queryAndShowDevices();
+        return;
+      }
+      trackQueue.push(trackUri);
+      if (albumDetails && trackDetails) {
+        logMsg(`QUEUED: ${albumDetails.name} — ${trackDetails.name}<br><small> on <b>${selectedDeviceName||"device"}</b></small>`, false, true);
+      } else {
+        logMsg("Queued on <b>"+(selectedDeviceName||"device")+"</b>", false, true);
+      }
+      renderQueue();
+    }
+    document.getElementById('btn-play').onclick = playPauseToggle;
+    document.getElementById('btn-prev').onclick = prevTrack;
+    document.getElementById('btn-next').onclick = nextTrack;
+
+    function finishCode() {
+      if (keypadDigits.length !== 4) return;
+      const albIndex = parseInt(keypadDigits.slice(0,2), 10);
+      const trIndex = parseInt(keypadDigits.slice(2,4), 10) - 1;
+      keypadDigits = "";
+      renderSelectCode();
+      const alb = albums[albIndex];
+      if (!alb) return logMsg("Invalid album", true, true);
+      const tr = alb.tracks[trIndex];
+      if (!tr) return logMsg("No such track", true, true);
+      addToQueueConnect(tr.uri, alb, tr);
+    }
+
+    (async()=>{
+      if (await checkLogin()) {
+        if (!await ensureDeviceSelected()) {
+          logMsg("Connect a Spotify device to begin.", true, false);
+        } else if (selectedDeviceName) {
+          logMsg("Ready. Using device: <b>" + selectedDeviceName + "</b>", false, true);
+        }
+        pollNowPlaying(); // <--- ADD THIS LINE TO START POLLING!
+      }
+    })();
+
+
+    function showMyPlaylistPage() {
+      const list = document.getElementById("playlist-list");
+      const pagination = document.getElementById("playlist-pagination");
+      const prevBtn = document.getElementById("playlist-prev");
+      const nextBtn = document.getElementById("playlist-next");
+      const pageinfo = document.getElementById("playlist-pageinfo");
+      list.innerHTML = "";
+      if (!mySpotifyPlaylists.length) {
+        pagination.style.display = "none";
+        return;
+      }
+      let total = mySpotifyPlaylists.length;
+      let pages = Math.ceil(total / playlistPageSize);
+      if (playlistCurrentPage >= pages) playlistCurrentPage = pages - 1;
+      if (playlistCurrentPage < 0) playlistCurrentPage = 0;
+      const begin = playlistCurrentPage * playlistPageSize;
+      const end = Math.min(begin + playlistPageSize, total);
+
+      // draw playlist buttons
+      mySpotifyPlaylists.slice(begin, end).forEach(pl => {
+        const item = document.createElement("button");
+        item.type = "button";
+        item.textContent = pl.name + (pl.owner && pl.owner.display_name ? " — " + pl.owner.display_name : "");
+        if (pl.description) item.title = pl.description;
+        item.className = "playlist-choice";
+        item.onclick = () => {
+          loadPlaylist(pl.id);
+          document.getElementById("playlist-modal").close();
+        };
+        list.appendChild(item);
+      });
+
+      // handle paginator
+      pagination.style.display = (pages > 1) ? "block" : "none";
+      prevBtn.disabled = (playlistCurrentPage === 0);
+      nextBtn.disabled = (playlistCurrentPage >= (pages - 1));
+      pageinfo.textContent = `Page ${playlistCurrentPage + 1} / ${pages}`;
+    }
+
+    document.getElementById("playlist-prev").onclick = function() {
+      playlistCurrentPage--;
+      showMyPlaylistPage();
+    };
+    document.getElementById("playlist-next").onclick = function() {
+      playlistCurrentPage++;
+      showMyPlaylistPage();
+    };
+    // ---- HELPER & UI FUNCTIONS ----
+    function ensure2(x) { return x.toString().padStart(2, "0"); }
+    function logMsg(msg, err=false, autoclear=true) {
+      let el = document.getElementById("msg");
+      el.style.opacity = "1";
+      el.innerHTML = "";
+      if (msg) {
+        // Allow <b></b>, escape other tags:
+        el.innerHTML = msg.replace(/<(?!\/?b\b)[^>]*>/g,'');
+      }
+      el.classList.toggle("error", err);
+      el.style.color = err ? "#ff4187" : "#12ffc8";
+      if (clearMsgTimer) clearTimeout(clearMsgTimer);
+      if (msg && autoclear) {
+        clearMsgTimer = setTimeout(() => { el.style.opacity = "0"; }, 5000);
+      }
+    }
+
+    // --- Playlist Picker logic ---
+    async function fetchMySpotifyPlaylists() {
+      try {
+        const resp = await fetch("https://api.spotify.com/v1/me/playlists?limit=50", {
+          headers: { Authorization: "Bearer " + token }
+        });
+        if (resp.ok) {
+          const data = await resp.json();
+          return data.items || [];
+        }
+      } catch {}
+      return [];
+    }
+    // ========== SPOTIFY AUTH FLOW & TOKEN MGMT ==========
+    function base64UrlEncode(str) {
+      return btoa(String.fromCharCode.apply(null, new Uint8Array(str)))
+        .replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+    }
+    async function sha256(plain) {
+      return await crypto.subtle.digest("SHA-256", new TextEncoder().encode(plain));
+    }
+    function randomString(length) {
+      const array = new Uint8Array(length);
+      crypto.getRandomValues(array);
+      return Array.from(array, d => ("0" + d.toString(16)).slice(-2)).join("");
+    }
+    async function login() {
+      const codeVerifier = randomString(64);
+      const codeChallenge = base64UrlEncode(await sha256(codeVerifier));
+      localStorage.setItem("pkce_code_verifier", codeVerifier);
+      const url = new URL("https://accounts.spotify.com/authorize");
+      url.searchParams.set("client_id", clientId);
+      url.searchParams.set("response_type", "code");
+      url.searchParams.set("redirect_uri", redirectUri);
+      url.searchParams.set("scope", [
+        "user-read-email",
+        "playlist-read-private",
+        "playlist-read-collaborative",
+        "playlist-modify-private",
+        "playlist-modify-public",
+        "streaming",
+        "ugc-image-upload",
+        "user-library-read",
+        "user-modify-playback-state",
+        "user-read-currently-playing",
+        "user-read-email",
+        "user-read-playback-state",
+        "user-read-private",
+        "user-top-read"
+      ].join(" "));
+      url.searchParams.set("code_challenge_method", "S256");
+      url.searchParams.set("code_challenge", codeChallenge);
+      window.location = url.toString();
+    }
+    async function fetchToken(code) {
+      const codeVerifier = localStorage.getItem("pkce_code_verifier");
+      if (!codeVerifier) return null;
+      const body = new URLSearchParams({
+        client_id: clientId,
+        grant_type: "authorization_code",
+        code: code,
+        redirect_uri: redirectUri,
+        code_verifier: codeVerifier
+      });
+      const res = await fetch("https://accounts.spotify.com/api/token", {
+        method: "POST",
+        headers: {"Content-Type": "application/x-www-form-urlencoded"},
+        body: body
+      });
+      // Remove code from URL IMMEDIATELY (avoid re-use!)
+      window.history.replaceState({}, document.title, "/");
+      if (!res.ok) { 
+        // Clear PKCE and token data so new login will work
+        localStorage.removeItem("pkce_code_verifier");
+        localStorage.removeItem("spotify_token_data");
+        logMsg("Failed to fetch token (bad or expired code). Please logout and try again.", true, false); 
+        return null; 
+      }
+      const data = await res.json();
+      saveTokenData(data);
+      return data;
+    }
+    async function refreshAccessToken() {
+      if (!refreshToken) return;
+      const body = new URLSearchParams({
+        grant_type: "refresh_token",
+        refresh_token: refreshToken,
+        client_id: clientId
+      });
+      const res = await fetch("https://accounts.spotify.com/api/token", {
+        method: "POST",
+        headers: {"Content-Type": "application/x-www-form-urlencoded"},
+        body: body
+      });
+      if (res.ok) {
+        const data = await res.json();
+        saveTokenData(data, true);
+        scheduleTokenRefresh();
+      } else {
+        logMsg("Failed to refresh token. Please login again.", true, false);
+        showLogin();
+      }
+    }
+    function saveTokenData(data, isRefresh = false) {
+      token = data.access_token;
+      if (data.refresh_token || !isRefresh) refreshToken = data.refresh_token || refreshToken;
+      expiresIn = data.expires_in;
+      tokenExp = Date.now() + (expiresIn - 30) * 1000;
+      localStorage.setItem("spotify_token_data", JSON.stringify({ token, refreshToken, tokenExp }));
+    }
+    function restoreTokenData() {
+      try {
+        const json = localStorage.getItem("spotify_token_data");
+        if (!json) return false;
+        const { token: t, refreshToken: r, tokenExp: e } = JSON.parse(json);
+        token = t; refreshToken = r; tokenExp = e;
+        if (!token || !refreshToken) return false;
+        if (Date.now() > tokenExp) { refreshAccessToken(); return false; }
+        return true;
+      } catch { return false; }
+    }
+    function scheduleTokenRefresh() {
+      if (!tokenExp) return;
+      const ms = tokenExp - Date.now();
+      if (ms > 0) setTimeout(refreshAccessToken, ms);
+    }
+    async function checkLogin() {
+      const url = new URL(window.location);
+      const code = url.searchParams.get("code");
+      if (code) await fetchToken(code);
+      else if (!restoreTokenData()) { showLogin(); return false; }
+      showApp();
+      scheduleTokenRefresh();
+      return true;
+    }
+    function showLogin() {
+      document.getElementById("login").style.display = "";
+      document.getElementById("logout").style.display = "none";
+      document.getElementById("chooseplaylist").style.display = "none";
+      document.getElementById("choosedevice").style.display = "none";
+      logMsg("Login to start.", false, false);
+      // Close all modals:
+      document.getElementById('queue-scroll-modal').style.display = "none";
+      document.getElementById('device-modal').close();
+    }
+    function showApp() {
+      document.getElementById("login").style.display = "none";
+      document.getElementById("logout").style.display = "";
+      document.getElementById("chooseplaylist").style.display = "";
+      document.getElementById("choosedevice").style.display = "";
+      logMsg("Load a playlist to get started", false, false);
+    }
+    function logout() {
+      token = refreshToken = null;
+      localStorage.removeItem("spotify_token_data");
+      localStorage.removeItem("pkce_code_verifier");
+      showLogin();
+    }
+
+    // ==== EVENT HANDLERS FOR AUTH AND MODAL ====
+    document.getElementById("login").onclick = login;
+    document.getElementById("logout").onclick = () => { logout(); window.location.reload(); };
+    document.getElementById("chooseplaylist").onclick = async () => {
+      document.getElementById("playlist-modal").showModal();
+      setTimeout(async () => {
+        document.getElementById("playlist-url").focus();
+
+        // Show loading spinner
+        const loadingSpan = document.getElementById("playlist-loading");
+        loadingSpan.style.display = "inline-block";
+        loadingSpan.innerHTML = '<span class="loading loading-spinner loading-md align-middle"></span> Loading playlists...';
+        document.getElementById("playlist-list").innerHTML = "";
+        document.getElementById("playlist-pagination").style.display = "none";
+        mySpotifyPlaylists = [];
+        playlistCurrentPage = 0;
+
+        // Fetch playlists
+        const playlists = await fetchMySpotifyPlaylists();
+        mySpotifyPlaylists = playlists;
+        if (!playlists.length) {
+          loadingSpan.style.display = "inline-block";
+          loadingSpan.textContent = "No playlists found or unable to load.";
+          return;
+        }
+        loadingSpan.style.display = "none";
+        showMyPlaylistPage();
+      }, 100);
+    };
+    document.getElementById("playlist-cancel").onclick = () => {
+      document.getElementById("playlist-modal").close();
+      const modalbg = document.querySelector('#playlist-modal .modalbg');
+      if (modalbg) modalbg.style.display = 'none';
+    };
+    document.getElementById("playlist-ok").onclick = async (e) => {
+      e.preventDefault();
+      const url = document.getElementById("playlist-url").value.trim();
+      const match = url.match(/playlist[/:]([a-zA-Z0-9]+)/);
+      if (!match) { logMsg("Invalid playlist URL.", true, false); return false; }
+      const playlistId = match[1];
+      await loadPlaylist(playlistId);
+      document.getElementById("playlist-modal").close();
+      const modalbg = document.querySelector('#playlist-modal .modalbg');
+      if (modalbg) modalbg.style.display = 'none';
+      return false;
+    };
+
+    // ========= PLAYLIST & GRID LOADING =========
+    async function fetchAllPlaylistTracks(pid) {
+      let out = [], url = `https://api.spotify.com/v1/playlists/${pid}/tracks?limit=100`;
+      while(url) {
+        const resp = await fetch(url, {headers:{Authorization:"Bearer "+token}});
+        const data = await resp.json();
+        if (data.items) out = out.concat(data.items);
+        url = data.next;
+        if(out.length>=100) break;
+      }
+      return out.slice(0,100);
+    }
+    async function fetchAlbumsBatch(albumIds) {
+      const BADGE_SIZE = 20;
+      const allAlbums = [];
+      for (let i = 0; i < albumIds.length; i += BADGE_SIZE) {
+        const ids = albumIds.slice(i, i + BADGE_SIZE).join(',');
+        const resp = await fetch(`https://api.spotify.com/v1/albums?ids=${ids}`, {headers:{Authorization:"Bearer "+token}});
+        if (resp.ok) {
+          const data = await resp.json();
+          allAlbums.push(...data.albums);
+        }
+      }
+      return allAlbums;
+    }
+    async function loadPlaylist(pid) {
+      playlistId = pid;
+      logMsg("Loading playlist...", false, false);
+      const tracks = await fetchAllPlaylistTracks(pid);
+      if (!tracks.length) { logMsg("No tracks found!", true, false); return; }
+      const albumSeen = {}, albumIds = [];
+      tracks.forEach(item=>{
+        const tr = item.track;
+        if (!tr || !tr.album || !tr.album.id) return;
+        if (!albumSeen[tr.album.id] && albumIds.length < 100) {
+          albumSeen[tr.album.id]=true;
+          albumIds.push(tr.album.id);
+        }
+      });
+      logMsg("Fetching albums...", false, false);
+      albums = [];
+      const rawAlbums = await fetchAlbumsBatch(albumIds);
+      albums = rawAlbums.map(dat => ({
+        id: dat.id,
+        name: dat.name,
+        artist: dat.artists?.map(a=>a.name).join(", ")||"",
+        art: dat.images[0]?.url,
+        tracks: dat.tracks.items.map(tr=>({
+          name: tr.name,
+          uri: tr.uri,
+          disc: tr.disc_number
+        }))
+      }));
+      currentPage = 0;
+      keypadDigits = "";
+      renderGrid(true);
+      renderSelectCode();
+      logMsg("Done. Let's Party, Dudes!", false, true);
+      renderQueue();
+      buildTrackIndexForNowPlaying();
+    }
+    function buildTrackIndexForNowPlaying() {
+      trackIdxMap={};
+      trackMap = {};
+      albums.forEach((alb,ai)=>{
+        (alb.tracks||[]).forEach((t,tridx)=>{
+          trackIdxMap[t.uri]={albumIndex:ai,trackIndex:tridx,disc:t.disc};
+          trackMap[t.uri] = {
+            title: t.name,
+            artist: alb.artist,
+            album: alb.name,
+            art: alb.art,
+            uri: t.uri
+          };
+        });
+      });
+    }
+
+    // ========= GRID RENDERING AND PAGING =========
+    function createGrid(pageIdx) {
+      const grid = document.createElement("div");
+      grid.className = "main-grid";
+      grid.dataset.pageidx = pageIdx;
+      const offset = pageIdx * 4;
+      for (let y = 0; y < 2; y++) for (let x = 0; x < 2; x++) {
+        const i = offset + y*2+x;
+        if (!albums[i]) {
+          grid.appendChild(document.createElement("div"));
+          continue;
+        }
+        const alb = albums[i], cell = document.createElement("div");
+        cell.className = "album-cell";
+        const leftpanel = document.createElement("div");
+        leftpanel.className = "album-list scrollable";
+        let lefthtml = `
+          <div class="album-info-header">
+            <span class="albnum">${ensure2(i)}</span>
+            <span class="album-title">${alb.name}</span>
+          </div>
+          <div>
+            <span class="album-artist">${alb.artist}</span>
+          </div>
+        `;
+        alb.tracks.slice(0, 25).forEach((track, tix) => {
+          lefthtml += `<div class="track-row"><span class="tracknum">${ensure2(tix+1)}</span>
+            <span class="track-title">${track.name}</span></div>`;
+        });
+        leftpanel.innerHTML = lefthtml;
+        const cov = document.createElement("div");
+        cov.className = "album-cov";
+        cov.innerHTML = `<img src="${alb.art || ""}" alt="album art">`;
+        cell.appendChild(leftpanel);
+        cell.appendChild(cov);
+        grid.appendChild(cell);
+      }
+      return grid;
+    }
+    function renderGrid(initial) {
+      const wrap = document.getElementById("main-grid-animwrap");
+      if (initial) while(wrap.firstChild) wrap.removeChild(wrap.firstChild);
+      const prevGrid = wrap.querySelector(".main-grid");
+      const newGrid = createGrid(currentPage);
+      newGrid.classList.add("show");
+      if (initial || !prevGrid) {
+        if (prevGrid) wrap.removeChild(prevGrid);
+        wrap.appendChild(newGrid);
+        return;
+      }
+      wrap.appendChild(newGrid);
+      wrap.removeChild(prevGrid);
+    }
+    function totalPages() { return Math.ceil(albums.length/4); }
+    let animating = false;
+    function gotoPage(p) {
+      if (animating) return;
+      if (p < 0) p = 0;
+      if (p >= totalPages()) p = totalPages()-1;
+      if (p === currentPage) return;
+      const dir = (p > currentPage) ? 'right' : 'left';
+      slidePage(dir, p);
+      currentPage = p;
+    }
+    function slidePage(direction, newPageIdx) {
+      if (animating) return;
+      animating = true;
+      const wrap = document.getElementById("main-grid-animwrap");
+      const prevGrid = wrap.querySelector(".main-grid");
+      const newGrid = createGrid(newPageIdx);
+      newGrid.style.zIndex = 12;
+      if (prevGrid) prevGrid.style.zIndex = 11;
+      function clearOld() {
+        newGrid.classList.remove(direction === 'right' ? "slide-in-from-right" : "slide-in-from-left");
+        newGrid.classList.add("show");
+        if (prevGrid) prevGrid.classList.remove(direction === 'right' ? "slide-out-to-left" : "slide-out-to-right");
+        if (prevGrid && wrap.contains(prevGrid)) wrap.removeChild(prevGrid);
+        animating = false;
+      }
+      if (direction === 'right') {
+        newGrid.classList.add("slide-in-from-right");
+        if(prevGrid) {
+          prevGrid.classList.remove("show");
+          prevGrid.classList.add("slide-out-to-left");
+        }
+        wrap.appendChild(newGrid);
+        setTimeout(clearOld, 470); // or match your CSS transition duration
+      } else {
+        newGrid.classList.add("slide-in-from-left");
+        if(prevGrid) {
+          prevGrid.classList.remove("show");
+          prevGrid.classList.add("slide-out-to-right");
+        }
+        wrap.appendChild(newGrid);
+        setTimeout(clearOld, 470);
+      }
+      keypadDigits = "";
+      if (typeof renderSelectCode === "function") renderSelectCode();
+    }
+
+    // ========= KEYPAD HANDLING =========
+    function renderSelectCode() {
+      document.getElementById("selectcode").textContent =
+        keypadDigits.padEnd(4, "_");
+    }
+    function setKeypadDigit(d) {
+      if (d === "<") gotoPage(currentPage-1);
+      else if (d === ">") gotoPage(currentPage+1);
+      else if (d === "X") {
+        keypadDigits = keypadDigits.slice(0, -1);
+        renderSelectCode();
+      }
+      else if (/^\d$/.test(d)) {
+        if (keypadDigits.length < 4) {
+          keypadDigits += d;
+          renderSelectCode();
+        }
+        if (keypadDigits.length === 4) finishCode();
+      }
+    }
+    function renderQueue() {
+      const n = trackQueue.length;
+      document.getElementById("queuecount").textContent = n.toString().padStart(2, "0");
+    }
+    // ==== POLLING: only poll faster if not error/429 ====
+    function pollNowPlaying() {
+      let pollIntervalMs = 5000;
+      async function poll() {
+        if (document.hidden) {
+          setTimeout(poll, pollIntervalMs);
+          return;
+        }
+        await checkAndRefreshTokenIfExpiring();
+        try {
+          const resp = await fetch("https://api.spotify.com/v1/me/player/currently-playing", {
+            headers: { Authorization: "Bearer " + token }
+          });
+          if (!resp.ok) {
+            if (resp.status === 429) pollIntervalMs = 30000;
+            setTimeout(poll, pollIntervalMs);
+            return;
+          }
+          pollIntervalMs = 5000;
+          const dat = await resp.json();
+          if (!dat || !dat.item) {
+            setTimeout(poll, pollIntervalMs);
+            return;
+          }
+          const newUri = dat.item.uri;
+          updatePlayButton(dat.is_playing);
+          if (lastPolledPlayingUri !== newUri) {
+            lastPolledPlayingUri = newUri;
+            currentPlayingUri = newUri;
+            lastCurrentPlayingItem = dat.item;
+            updateNowPlaying(newUri, true);
+            if (queueScrollActive) buildQueueScrollContent();
+          }
+        } catch {/*noop*/}
+        setTimeout(poll, pollIntervalMs);
+      }
+      poll();
+    }
+    function updateNowPlaying(uri, isFreshChange = false) {
+      currentPlayingUri = uri;
+      if (!uri || !trackIdxMap[uri]) {
+        document.getElementById("playingcode").textContent = "____";
+        return;
+      }
+      const { albumIndex, trackIndex } = trackIdxMap[uri];
+      document.getElementById("playingcode").textContent = `${ensure2(albumIndex)} ${ensure2(trackIndex+1)}`;
+      if (isFreshChange && trackQueue.length) {
+        if (trackQueue[0] === uri) {
+          // Normal: remove head
+          trackQueue.shift();
+          renderQueue();
+        } else {
+          // How many times does this song appear in the queue?
+          const matches = trackQueue.reduce((n, entry) => n + (entry === uri ? 1 : 0), 0);
+          if (matches === 1) {
+            // Song exists once in queue; skip-ahead (remove everything up to and including this)
+            const idx = trackQueue.indexOf(uri);
+            if (idx >= 0) {
+              trackQueue.splice(0, idx + 1);
+              renderQueue();
+            }
+          } else if (matches > 1) {
+            // Duplicates detected: DO NOT remove anything, avoid ambiguity!
+            logMsg("Playback skipped to a song that appears multiple times in the queue. To avoid errors, the queue will not be auto-advanced.", true, false);
+          }
+          // else: song not in our local queue (was played from outside), take no action
+        }
+      }
+    }
+
+    // ========== EVENT BINDINGS FOR KEYPAD AND KEYS ==========
+    document.getElementById("keypad").addEventListener("click", (e) => {
+      if (e.target && e.target.matches(".keypad-btn")) {
+        setKeypadDigit(e.target.getAttribute("data-key"));
+        resetInactivityTimer();
+      }
+    });
+
+    // -- Keyboard control --
+    window.addEventListener("keydown", (e) => {
+      if (e.key && e.key.toLowerCase() === "z") {
+        fetchAndShowQueueModal();
+        e.preventDefault();
+        return;
+      }
+      if (!albums.length) return;
+      // digits, keypad left/right, enter "X"
+      if (/^\d$/.test(e.key) || e.key == "<" || e.key == ">" ) {
+        setKeypadDigit(e.key);
+        e.preventDefault();
+      }
+      // true left/right arrow
+      else if (e.key === "ArrowLeft") {
+        gotoPage(currentPage - 1);
+        e.preventDefault();
+      }
+      else if (e.key === "ArrowRight") {
+        gotoPage(currentPage + 1);
+        e.preventDefault();
+      }
+      // delete, backspace, "x"
+      else if (e.key==="Backspace" || e.key==="Delete" || e.key==="X"||e.key==="x") {
+        keypadDigits = keypadDigits.slice(0,-1);
+        renderSelectCode();
+        e.preventDefault();
+      }
+      // finish
+      else if (e.key==="Enter" && keypadDigits.length===4) {
+        finishCode();
+        e.preventDefault();
+      }
+    });
+
+   // ========== INIT ==========
+    (async()=>{
+      if (await checkLogin()) {
+        // Additional boot logic if needed...
+      }
+    })();
+
+    // ===== Efficient queue modal integration =====
+    function resetInactivityTimer() {
+      if (inactivityTimer) clearTimeout(inactivityTimer);
+      inactivityTimer = setTimeout(fetchAndShowQueueModal, INACTIVITY_MS);
+    }
+    function setupUserActivityListeners() {
+      const events = ["mousedown", "mousemove", "wheel", "touchstart"];
+      events.forEach(evt => {
+        window.addEventListener(evt, resetInactivityTimer, { passive: true });
+        document.addEventListener(evt, resetInactivityTimer, { passive: true });
+      });
+      ["keydown"].forEach(evt => {
+        window.addEventListener(evt, resetInactivityTimer, false);
+        document.addEventListener(evt, resetInactivityTimer, false);
+      });
+      resetInactivityTimer(); 
+    }
+    setupUserActivityListeners();
+
+    // ---- QUEUE MODAL ----
+    async function fetchAndShowQueueModal() {
+      // If already open, don't do anything.
+      if (queueScrollActive) return;
+      resetInactivityTimer();
+      if (!token || typeof trackQueue === "undefined") {
+        logMsg("Not logged in or app not fully initialized.", true, false);
+        return; // Prevent queue modal opening
+      }
+      try {
+        const resp = await fetch("https://api.spotify.com/v1/me/player/currently-playing", {
+          headers: { Authorization: "Bearer " + token }
+        });
+        if (resp.ok) {
+          const dat = await resp.json();
+          if (dat && dat.item) {
+            updateNowPlaying(dat.item.uri);
+            lastCurrentPlayingItem = dat.item;
+          }
+        }
+      } catch { /* noop */ }
+      actuallyShowQueueScroll();
+    }
+
+    function actuallyShowQueueScroll() {
+      queueScrollActive = true;
+      const modal = document.getElementById('queue-scroll-modal');
+      modal.style.display = "flex";
+      buildQueueScrollContent();
+      function exitHandler(e) {
+        exitQueueScroll();
+        e.stopPropagation();
+        e.preventDefault();
+      }
+      modal.addEventListener('mousedown', exitHandler, { once: true });
+      modal.addEventListener('touchend', exitHandler, { once: true });
+      window.addEventListener('keydown', exitHandler, { once: true });
+    }
+
+    function exitQueueScroll() {
+      queueScrollActive = false;
+      document.getElementById('queue-scroll-modal').style.display = "none";
+      resetInactivityTimer();
+    }
+    if (typeof renderQueue === "function") {
+      const origRenderQueue = renderQueue;
+      renderQueue = function() {
+        origRenderQueue.apply(this, arguments);
+        if (queueScrollActive) buildQueueScrollContent();
+      }
+    }
+
+    let lastQueueSnapshot = null;
+    let lastNowPlayingUri = null;
+
+    // ---- Build & Animate Queued Songs List ----
+    function buildQueueScrollContent() {
+      if (typeof trackQueue === "undefined") {
+        console.error("trackQueue is not defined! (queue may be broken due to failed login or app init)");
+        return;
+      }
+      const container = document.querySelector('.queue-scroll-items-container');
+      container.innerHTML = "";
+
+      // Build entries:
+      const entries = [];
+      if (currentPlayingUri) {
+        let nowPlayingEntry = null;
+        if (trackMap[currentPlayingUri]) {
+          nowPlayingEntry = { ...trackMap[currentPlayingUri], nowPlaying: true };
+        } else if (lastCurrentPlayingItem) {
+          // fallback: synthesize data from the latest now playing item
+          nowPlayingEntry = {
+            title: lastCurrentPlayingItem.name,
+            artist: (lastCurrentPlayingItem.artists?.map(a => a.name).join(', ')) || '',
+            album: lastCurrentPlayingItem.album?.name || '',
+            art: lastCurrentPlayingItem.album?.images?.[0]?.url || '',
+            uri: currentPlayingUri,
+            nowPlaying: true
+          };
+        }
+        if (nowPlayingEntry) entries.push(nowPlayingEntry);
+      }
+      let skippedNowPlaying = false;
+      for (let i = 0; i < trackQueue.length; i++) {
+        const uri = trackQueue[i];
+        if (uri === currentPlayingUri && !skippedNowPlaying) {
+          // Skip ONLY the first occurrence of the currently playing song
+          skippedNowPlaying = true;
+          continue;
+        }
+        if (trackMap[uri]) {
+          entries.push({ ...trackMap[uri], nowPlaying: false, queueIndex: i });
+        }
+      }
+      const queueSnapshot = entries.map(e => e.uri).join(',');
+      if (
+        queueSnapshot === lastQueueSnapshot &&
+        currentPlayingUri === lastNowPlayingUri &&
+        container.children.length > 0 // guards against first render!
+      ) {
+        return; // Don't rebuild, nothing has changed.
+      }
+      lastQueueSnapshot = queueSnapshot;
+      lastNowPlayingUri = currentPlayingUri;
+
+      if (!entries.length) {
+        const d = document.createElement('div');
+        d.className = "queue-empty-message";
+        d.textContent = "Queue is empty";
+        container.appendChild(d);
+        document.getElementById('queue-badge').textContent = "00";
+        container.style.transition = "";
+        container.style.transform = "translateY(0)";
+        return;
+      }
+
+      entries.forEach((item, idx) => {
+        const queueNumber = (idx % entries.length) + 1;
+        const d = document.createElement('div');
+        d.className = "queue-scroll-item";
+        if (item.nowPlaying) {
+          d.classList.add('now-playing');
+          if (!trackMap[item.uri]) d.classList.add('not-in-set');
+        }
+        if (idx !== entries.length - 1) d.style.marginBottom = "7px";
+        d.innerHTML = `
+          <span class="queue-pos-num" style="min-width:2.8em;display:inline-block;font-weight:800;color:#19ffe0;font-size:1.12em;text-align:right;padding-right:10px;filter:brightness(1.08)">${queueNumber}.</span>
+          <img class="queue-scroll-art" src="${item.art || ''}" loading="lazy" />
+          <div class="queue-scroll-details">
+            <div class="queue-scroll-title">${item.title}</div>
+            <div class="queue-scroll-artist">${item.artist || ''}</div>
+            <div class="queue-scroll-album">${item.album || ''}</div>
+          </div>
+        `;
+        container.appendChild(d);
+      });
+
+      // Animate fade-in
+      Array.from(container.children).forEach((el, i) => {
+        el.style.opacity = 0;
+        setTimeout(() => { el.style.opacity = 1; }, 90 * i + 160);
+      });
+
+      // Update the queue badge
+      let badgeCount = 0;
+      if (entries.length > 0) {
+        badgeCount = entries.length - (entries[0].nowPlaying ? 1 : 0);
+      }
+      document.getElementById('queue-badge').textContent =
+        badgeCount.toString().padStart(2, "0");
+
+      // Wait for all images to load before starting marquee
+      const images = container.querySelectorAll('img.queue-scroll-art');
+      let imagesLoaded = 0;
+      function allImagesReady() {
+        setTimeout(startFiniteMarquee, 1);
+      }
+      if (images.length === 0) allImagesReady();
+      else {
+        images.forEach(img => {
+          img.onload = img.onerror = function() {
+            imagesLoaded++;
+            if (imagesLoaded === images.length) allImagesReady();
+          }
+        });
+        setTimeout(allImagesReady, 600);
+      }
+
+      function startFiniteMarquee() {
+        if (queueScrollTimeout) {
+          clearTimeout(queueScrollTimeout);
+          queueScrollTimeout = null;
+        }
+        container.style.transition = '';
+        container.style.transform = 'translateY(0)';
+        container.removeEventListener('transitionend', lastScroll.onEnd || (()=>{}));
+        lastScroll.running = false;
+
+        function animateQueue() {
+          const scrollView = container.closest('.queue-scroll-scrollview');
+          // --- KEY CHANGE: subtract padding-top from clientHeight for correct "window" size!
+          const style = getComputedStyle(scrollView);
+          const paddingTop = parseFloat(style.paddingTop) || 0;
+          const fudge = 0;
+
+          // The visible scrolled area is clientHeight minus paddingTop for glass header overlay
+          const viewport = scrollView.clientHeight - paddingTop;
+          const maxScroll = container.scrollHeight - viewport + fudge;
+
+          if (maxScroll <= 0) {
+            container.style.transition = '';
+            container.style.transform = 'translateY(0)';
+            return;
+          }
+
+          const pixelsPerSecond = 30;
+          const duration = maxScroll / pixelsPerSecond;
+          container.style.transition = `transform ${duration}s linear`;
+          container.style.transform = `translateY(-${maxScroll}px)`;
+
+          lastScroll.running = true;
+          lastScroll.onEnd = function() {
+            container.removeEventListener('transitionend', lastScroll.onEnd);
+            lastScroll.running = false;
+            queueScrollTimeout = setTimeout(() => {
+              container.style.transition = '';
+              container.style.transform = 'translateY(0)';
+              queueScrollTimeout = setTimeout(animateQueue, QUEUE_PAUSE_MS);
+            }, QUEUE_PAUSE_MS);
+          };
+          container.addEventListener('transitionend', lastScroll.onEnd);
+        }
+
+        // Check before starting scroll
+        const scrollView = container.closest('.queue-scroll-scrollview');
+        const style = getComputedStyle(scrollView);
+        const paddingTop = parseFloat(style.paddingTop) || 0;
+        const fudge = 0;
+        const viewport = scrollView.clientHeight - paddingTop;
+        const maxScroll = container.scrollHeight - viewport + fudge;
+
+        if (maxScroll <= 0) {
+          container.style.transition = '';
+          container.style.transform = 'translateY(0)';
+          return;
+        }
+        queueScrollTimeout = setTimeout(animateQueue, QUEUE_PAUSE_MS);
+      }
+    }
+    // Unstick highlight on touchscreen/mobile/touchpads
+    document.querySelectorAll('.playbtn, .keypad-btn, .btn').forEach(btn => {
+      btn.addEventListener('touchend', function() { this.blur(); });
+      btn.addEventListener('mouseup', function() { this.blur(); });
+    });
+  </script>
+</body>
+</html>
