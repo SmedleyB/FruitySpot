@@ -198,6 +198,67 @@
             box-shadow: 0 0 20px var(--jukebox-neon-blue);
         }
 
+        /* Playlist picker styles */
+        .playlist-choice {
+            display: block;
+            margin: 8px auto;
+            background: linear-gradient(90deg, #0a0a0a 60%, rgba(0, 255, 255, 0.15) 100%);
+            color: var(--jukebox-neon-blue);
+            font-weight: 600;
+            font-family: 'Press Start 2P', monospace;
+            font-size: 0.7rem;
+            border: 2px solid var(--jukebox-neon-blue);
+            border-radius: 8px;
+            width: 100%;
+            padding: 12px 10px;
+            cursor: pointer;
+            box-shadow: 0 3px 14px rgba(0, 255, 255, 0.2);
+            transition: all 0.2s;
+            text-align: left;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .playlist-choice:hover, .playlist-choice:focus {
+            background: var(--jukebox-neon-blue);
+            color: #000;
+            border-color: #00FFFF;
+            box-shadow: 0 5px 22px rgba(0, 255, 255, 0.4);
+            transform: translateY(-2px);
+        }
+
+        #playlist-loading {
+            color: var(--jukebox-bright-green);
+            font-family: 'Press Start 2P', monospace;
+            font-size: 0.75rem;
+        }
+
+        .playlist-pagination-controls {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 12px;
+            margin-top: 12px;
+        }
+
+        .playlist-pagination-controls button {
+            padding: 6px 12px;
+            font-size: 0.7rem;
+            font-family: 'Press Start 2P', monospace;
+        }
+
+        .playlist-pagination-controls button:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+        }
+
+        #playlist-pageinfo {
+            color: var(--jukebox-neon-blue);
+            font-family: 'Press Start 2P', monospace;
+            font-size: 0.65rem;
+        }
+
         /* Queue Scrolling CSS */
         @keyframes scroll-queue {
             0% { transform: translateY(0); }
@@ -257,9 +318,23 @@
 
             <label for="playlist-uri-input" class="block text-lg font-semibold mb-2" style="color: var(--jukebox-bright-green);">Playlist URI / URL</label>
             <input type="text" id="playlist-uri-input" placeholder="spotify:playlist:ID or URL"
-                   class="w-full p-3 bg-gray-900 text-white rounded-lg border border-gray-600 focus:outline-none focus:ring-2 focus:ring-pink-500 mb-6">
+                   class="w-full p-3 bg-gray-900 text-white rounded-lg border border-gray-600 focus:outline-none focus:ring-2 focus:ring-pink-500 mb-4">
 
-            <div class="flex justify-center space-x-4">
+            <div class="my-3 text-center" style="color: var(--jukebox-neon-blue); font-family: 'Press Start 2P', monospace; font-size: 0.75rem;">
+                - OR CHOOSE ONE -
+            </div>
+
+            <div id="playlist-picker" style="min-width:320px; min-height:54px; text-align:center; max-height: 300px; overflow-y: auto;">
+                <span id="playlist-loading" style="display:none;">⏳ Loading playlists...</span>
+                <div id="playlist-list"></div>
+                <div id="playlist-pagination" class="playlist-pagination-controls" style="display:none;">
+                    <button type="button" id="playlist-prev" class="jukebox-btn">◀ Prev</button>
+                    <span id="playlist-pageinfo"></span>
+                    <button type="button" id="playlist-next" class="jukebox-btn">Next ▶</button>
+                </div>
+            </div>
+
+            <div class="flex justify-center space-x-4 mt-6">
                 <button id="load-playlist-btn"
                         class="jukebox-btn px-6 py-3 text-lg transition duration-150">
                     LOAD 100 TRACKS
@@ -811,6 +886,67 @@
             renderQueue();
         }
 
+        // --- User Playlist Fetching and Display ---
+        let mySpotifyPlaylists = [];
+        let playlistCurrentPage = 0;
+        const playlistPageSize = 5;
+
+        const fetchMySpotifyPlaylists = async () => {
+            try {
+                const data = await fetchSpotify('/me/playlists?limit=50');
+                if (data && data.items) {
+                    return data.items;
+                }
+            } catch (error) {
+                console.error('Error fetching playlists:', error);
+            }
+            return [];
+        };
+
+        const showMyPlaylistPage = () => {
+            const list = select('#playlist-list');
+            const pagination = select('#playlist-pagination');
+            const prevBtn = select('#playlist-prev');
+            const nextBtn = select('#playlist-next');
+            const pageinfo = select('#playlist-pageinfo');
+            
+            list.innerHTML = '';
+            
+            if (!mySpotifyPlaylists.length) {
+                pagination.style.display = 'none';
+                return;
+            }
+            
+            const total = mySpotifyPlaylists.length;
+            const pages = Math.ceil(total / playlistPageSize);
+            
+            if (playlistCurrentPage >= pages) playlistCurrentPage = pages - 1;
+            if (playlistCurrentPage < 0) playlistCurrentPage = 0;
+            
+            const begin = playlistCurrentPage * playlistPageSize;
+            const end = Math.min(begin + playlistPageSize, total);
+            
+            // Draw playlist buttons
+            mySpotifyPlaylists.slice(begin, end).forEach(pl => {
+                const item = document.createElement('button');
+                item.type = 'button';
+                item.textContent = pl.name + (pl.owner && pl.owner.display_name ? ' — ' + pl.owner.display_name : '');
+                if (pl.description) item.title = pl.description;
+                item.className = 'playlist-choice';
+                item.onclick = () => {
+                    loadPlaylistTracks('spotify:playlist:' + pl.id);
+                    select('#playlist-modal').classList.add('hidden');
+                };
+                list.appendChild(item);
+            });
+            
+            // Handle paginator
+            pagination.style.display = (pages > 1) ? 'flex' : 'none';
+            prevBtn.disabled = (playlistCurrentPage === 0);
+            nextBtn.disabled = (playlistCurrentPage >= (pages - 1));
+            pageinfo.textContent = `Page ${playlistCurrentPage + 1} / ${pages}`;
+        };
+
 
         const loadPlaylistTracks = async (uri) => {
             const playlistId = getPlaylistIdFromUri(uri);
@@ -1323,16 +1459,54 @@
             });
 
             // --- Playlist Modal Listeners ---
-            select('#open-playlist-modal-btn').addEventListener('click', () => {
+            select('#open-playlist-modal-btn').addEventListener('click', async () => {
                 if (accessToken) {
                     select('#playlist-modal').classList.remove('hidden');
                     select('#playlist-uri-input').focus();
+                    
+                    // Load user playlists
+                    const loadingSpan = select('#playlist-loading');
+                    const playlistList = select('#playlist-list');
+                    const pagination = select('#playlist-pagination');
+                    
+                    loadingSpan.style.display = 'inline-block';
+                    playlistList.innerHTML = '';
+                    pagination.style.display = 'none';
+                    mySpotifyPlaylists = [];
+                    playlistCurrentPage = 0;
+                    
+                    try {
+                        const playlists = await fetchMySpotifyPlaylists();
+                        mySpotifyPlaylists = playlists;
+                        
+                        if (!playlists.length) {
+                            loadingSpan.textContent = 'No playlists found.';
+                        } else {
+                            loadingSpan.style.display = 'none';
+                            showMyPlaylistPage();
+                        }
+                    } catch (error) {
+                        loadingSpan.textContent = 'Error loading playlists.';
+                        console.error('Error loading playlists:', error);
+                    }
                 } else {
                     showMessage('Please authorize Spotify first (Client ID required).', true);
                 }
             });
+            
             select('#close-playlist-modal-btn').addEventListener('click', () => {
                 select('#playlist-modal').classList.add('hidden');
+            });
+
+            // Playlist pagination handlers
+            select('#playlist-prev').addEventListener('click', () => {
+                playlistCurrentPage--;
+                showMyPlaylistPage();
+            });
+            
+            select('#playlist-next').addEventListener('click', () => {
+                playlistCurrentPage++;
+                showMyPlaylistPage();
             });
 
             const playlistInput = select('#playlist-uri-input');
