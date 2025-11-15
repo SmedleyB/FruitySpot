@@ -57,7 +57,7 @@ Using the webpage (index.html)
 
 Other Notes:
 
-1. You can load a playlist with more than 100 songs and next/previous page buttons will appear allowing you to swap between pages. Those buttons aren't very attractive and ideally some animation would be added when swapping pages. In the future, I may try to add support for left/right arrow keys to trigger page changes.
+1. You can load a playlist with more than 100 songs and next/previous page buttons will appear allowing you to swap between pages. You can also use the left/right arrow keys on your keyboard to navigate between pages when pagination is active. Those buttons aren't very attractive and ideally some animation would be added when swapping pages.
 2. Writing 2 artists per title strip is not formatted well and is sometimes hard to read. I haven't spent time enhancing that - the original goal was to mimic a 100-track vintage jukebox where title strips only contain a single artist.
 3. Swapping betwen Spotify playback devices in the menu seems to kind of work? I haven't tested that funtionality too much,
 4. The queue sometimes exhibits weird behavior. The queue is designed so that it will read in and display whatever's in your local Spotify app's queue - both "Next in queue" and "Next from queue". Adding songs from the web page should add songs to the bottom of "Next in queue". There's also a bug in the Spotify APIs that sometimes causes the queue to list the same song multiple times even though it's in your queue only once (or perhaps not at all?). But adding songs should still queue and playback correctly despite what you see in the webpage's queue list.
