@@ -14,9 +14,23 @@ html,body{height:100%;margin:0;background:#071428;font-family:Arial, sans-serif}
 #foreground{position:absolute;left:0;top:0;width:1920px;height:1080px;pointer-events:none;image-rendering:pixelated}
 
 /* Title strips */
-.title-strip{position:absolute;width:350px;height:90px;background-size:cover;border-radius:6px;overflow:hidden;display:flex;flex-direction:column;justify-content:flex-start;padding:8px 10px;box-sizing:border-box}
+.title-strip{position:absolute;width:350px;height:90px;background-size:cover;border-radius:6px;overflow:hidden;display:flex;flex-direction:column;justify-content:flex-start;padding:8px 10px;box-sizing:border-box;transform-style:preserve-3d;backface-visibility:hidden}
 .title-strip .strip-header { display:none; }
 .title-strip .strip-content { display:flex; flex-direction:column; align-items:center; justify-content:center; flex:1; width:100%; padding:0; margin:0; }
+
+/* 3D Flip Animation */
+@keyframes flipStrip {
+  0% { transform: rotateY(0deg); }
+  50% { transform: rotateY(90deg); opacity: 0.3; }
+  100% { transform: rotateY(0deg); }
+}
+.title-strip.flipping { animation: flipStrip 0.6s ease-in-out; }
+
+/* Respect prefers-reduced-motion */
+@media (prefers-reduced-motion: reduce) {
+  .title-strip.flipping { animation: none; opacity: 0.5; transition: opacity 0.2s; }
+  .title-strip.flipping.flip-done { opacity: 1; }
+}
 
 /* song lines */
 .song-line{position:relative;width:100%;display:flex;align-items:center;justify-content:center;padding:0 8px;box-sizing:border-box;cursor:pointer;user-select:none}
@@ -915,6 +929,28 @@ function showSelectedNumberInMiddleBox(num){
   });
 })();
 
+/* Arrow key navigation for pagination */
+(function arrowKeyPaginationHandler(){
+  window.addEventListener('keydown', (ev)=>{
+    const active = document.activeElement;
+    // Don't intercept if user is typing in an input field
+    if(active && (active.tagName === 'INPUT' || active.tagName === 'TEXTAREA' || active.isContentEditable)) return;
+    
+    // Only handle arrow keys if pagination is active (more than one page)
+    if(!playlistPaginationState || playlistPaginationState.pages <= 1) return;
+    
+    if(ev.key === 'ArrowLeft'){
+      ev.preventDefault();
+      const p = Math.max(1, playlistPaginationState.currentPage - 1);
+      void gotoPage(p);
+    } else if(ev.key === 'ArrowRight'){
+      ev.preventDefault();
+      const p = Math.min(playlistPaginationState.pages, playlistPaginationState.currentPage + 1);
+      void gotoPage(p);
+    }
+  });
+})();
+
 /* Controls toggle (single centralized handler) */
 (function attachControlsToggle(){
   function showControls(){ controlsEl.classList.remove('hidden'); controlsEl.setAttribute('aria-hidden','false'); startPolling(); }
@@ -934,6 +970,46 @@ function showSelectedNumberInMiddleBox(num){
 
   if(controlsCloseBtn) controlsCloseBtn.addEventListener('click', (e)=>{ e.preventDefault(); hideControls(); });
 })();
+
+/* 3D Flip Animation for Title Strips */
+function triggerStripFlipAnimation(){
+  // Calculate wave delay based on position (top-left to bottom-right)
+  // Grid layout: 5 columns x 10 rows
+  // STRIPS_POSITIONS contains [x, y] coordinates
+  const maxDelay = 1400; // Total wave duration in ms
+  
+  strips.forEach((strip, idx) => {
+    const pos = STRIPS_POSITIONS[idx];
+    const x = pos[0];
+    const y = pos[1];
+    
+    // Normalize coordinates to 0-1 range
+    const maxX = Math.max(...STRIPS_POSITIONS.map(p => p[0]));
+    const maxY = Math.max(...STRIPS_POSITIONS.map(p => p[1]));
+    const normalizedX = x / maxX;
+    const normalizedY = y / maxY;
+    
+    // Calculate diagonal distance from top-left (0,0) to bottom-right (1,1)
+    // Using weighted sum: 60% horizontal, 40% vertical for smoother wave
+    const diagonalProgress = (normalizedX * 0.6 + normalizedY * 0.4);
+    const delay = Math.floor(diagonalProgress * maxDelay);
+    
+    setTimeout(() => {
+      strip.el.classList.add('flipping');
+      // Remove the class after animation completes
+      setTimeout(() => {
+        strip.el.classList.remove('flipping');
+        strip.el.classList.remove('flip-done');
+      }, 600);
+      // For reduced-motion, add flip-done class
+      if(PREFERS_REDUCED_MOTION){
+        setTimeout(() => {
+          strip.el.classList.add('flip-done');
+        }, 200);
+      }
+    }, delay);
+  });
+}
 
 /* Pagination controls (unchanged) */
 function updatePageIndicator(){
@@ -975,6 +1051,14 @@ async function gotoPage(pageNum){
   try{
     playlistPaginationState.currentPage = p;
     updatePageIndicator();
+    
+    // Trigger flip animation before loading new content
+    triggerStripFlipAnimation();
+    
+    // Wait for animation wave to reach midpoint before loading new content
+    // Wave takes ~1400ms, so wait ~700ms to flip at midpoint
+    await new Promise(resolve => setTimeout(resolve, 700));
+    
     // Calculate the pageIndex (0-based) used by loadPlaylistIntoStripsInternal
     const pageIndex = p - 1;
     // loadPlaylistIntoStripsInternal expects (playlistId, playlistName, pageIndex, pageCount, pageNum)
