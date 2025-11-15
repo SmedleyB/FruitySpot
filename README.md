@@ -1,3 +1,12 @@
+<img width="320" height="180" alt="indieglo" src="https://github.com/user-attachments/assets/6b4e572e-c7b9-4fb2-930f-363043d3bcd1" />
+<img width="320" height="180" alt="Screenshot 2025-11-14 at 1 25 24 PM" src="https://github.com/user-attachments/assets/0658fe9c-0dd7-4832-80ea-c55c6dc6d181" />
+<br>
+<img width="320" height="180" alt="Screenshot 2025-11-14 at 9 28 18 AM" src="https://github.com/user-attachments/assets/1a9cfc6a-daa8-4d04-9f0d-de4ef7528e9b" />
+<img width="320" height="180" alt="Screenshot 2025-11-14 at 9 30 33 AM" src="https://github.com/user-attachments/assets/ee746096-6373-4afb-8a00-daeecfab0724" />
+
+
+
+
 I'm leveraging AI to generate web-based Spotify front-ends that recreate a vintage-jukebox-style experience.
 <br>
 While these pages will work fine on your desktop and other devices, they are primarily aimed at those wanting to simulate a traditional jukebox, whether retrofitting into a vintage machine or building one from scratch.
