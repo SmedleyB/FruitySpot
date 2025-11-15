@@ -1206,6 +1206,16 @@
             }
 
             if (code) {
+                // Load clientId from localStorage before token exchange
+                if (!clientId) {
+                    clientId = localStorage.getItem(CLIENT_ID_STORAGE_KEY);
+                }
+                
+                if (!clientId) {
+                    showMessage('Client ID not found. Please re-authenticate.', true);
+                    return false;
+                }
+
                 const storedState = localStorage.getItem('pkce_state');
                 if (!state || state !== storedState) {
                     showMessage('State mismatch - possible security issue', true);
