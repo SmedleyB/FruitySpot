@@ -78,6 +78,17 @@ html,body{height:100%;margin:0;background:#071428;font-family:Arial, sans-serif}
 /* buttons inside modal rows */
 .device-row button { padding:6px 8px; border-radius:6px; cursor:pointer; background:transparent; border:1px solid rgba(255,255,255,0.06); color:#fff; }
 
+/* playlist picker styling */
+#playlistPicker { min-width:320px; min-height:54px; text-align:center; margin-top:8px; }
+#playlistLoading { display:none; color:#00ff00; font-family:"technology",Arial; }
+#playlistList { display:flex; flex-direction:column; gap:6px; max-height:220px; overflow:visible; }
+.playlist-choice { padding:10px 12px; border-radius:6px; background:rgba(255,255,255,0.05); color:#fff; border:1px solid rgba(255,255,255,0.08); cursor:pointer; text-align:left; font-family:"technology",Arial; transition:background 0.2s; }
+.playlist-choice:hover, .playlist-choice:focus { background:rgba(29,185,84,0.15); outline:none; }
+.playlist-pagination-controls { display:flex; gap:8px; align-items:center; justify-content:center; margin-top:8px; }
+.playlist-pagination-controls button { padding:6px 10px; border-radius:6px; background:rgba(0,0,0,0.6); color:#fff; border:1px solid rgba(255,255,255,0.06); cursor:pointer; }
+.playlist-pagination-controls button:disabled { opacity:0.4; cursor:not-allowed; }
+#playlistPageinfo { color:#00ff00; font-family:"technology",Arial; font-size:14px; }
+
 /* temporary toast */
 #toast { position:absolute; left:50%; top:920px; transform:translateX(-50%); background:rgba(0,0,0,0.75); color:#fff; padding:8px 12px; border-radius:8px; display:none; z-index:10000; font-family:"technology",Arial; }
 
@@ -122,6 +133,17 @@ html,body{height:100%;margin:0;background:#071428;font-family:Arial, sans-serif}
       <div id="modalBody">
         <label>Enter a Spotify playlist URL or URI to play (or leave blank to manage devices):</label>
         <input id="playlistInput" type="text" placeholder="https://open.spotify.com/playlist/..." />
+        
+        <div id="playlistPicker">
+          <span id="playlistLoading">⏳ Loading playlists...</span>
+          <div id="playlistList"></div>
+          <div id="playlistPagination" class="playlist-pagination-controls" style="display:none;">
+            <button type="button" id="playlistPrev">◀ Prev</button>
+            <span id="playlistPageinfo"></span>
+            <button type="button" id="playlistNext">Next ▶</button>
+          </div>
+        </div>
+        
         <label style="margin-top:8px">Devices (click one to select):</label>
         <input id="deviceSearch" type="text" placeholder="Filter devices by name..." />
         <div id="deviceList"></div>
@@ -182,6 +204,13 @@ const authBtn = document.getElementById('authBtn');
 const modalElem = document.getElementById('modal');
 const modalClose = document.getElementById('modalClose');
 const playlistInput = document.getElementById('playlistInput');
+const playlistPicker = document.getElementById('playlistPicker');
+const playlistLoading = document.getElementById('playlistLoading');
+const playlistList = document.getElementById('playlistList');
+const playlistPagination = document.getElementById('playlistPagination');
+const playlistPrev = document.getElementById('playlistPrev');
+const playlistNext = document.getElementById('playlistNext');
+const playlistPageinfo = document.getElementById('playlistPageinfo');
 const deviceSearch = document.getElementById('deviceSearch');
 const deviceList = document.getElementById('deviceList');
 const modalPlay = document.getElementById('modalPlay');
@@ -225,6 +254,11 @@ let defaultDeviceId = localStorage.getItem('sp_default_device') || null;
 let selectedDeviceId = null;
 let devicesCache = [];
 let statusTemplates = ['', '', ''];
+
+/* Playlist picker state */
+let mySpotifyPlaylists = [];
+let playlistCurrentPage = 0;
+const playlistPageSize = 5;
 
 /* local queue cache for optimistic UI */
 window._lastQueue = window._lastQueue || [];
@@ -566,6 +600,59 @@ async function refreshDevicesUI(){
   }
 }
 
+/* Playlist picker helpers */
+async function fetchMySpotifyPlaylists(){
+  try{
+    if(!accessToken) throw new Error('Not signed in');
+    const data = await spFetch('/me/playlists?limit=50');
+    if(data && data.items){
+      return data.items;
+    }
+  }catch(error){
+    console.error('Error fetching playlists:', error);
+  }
+  return [];
+}
+
+function showMyPlaylistPage(){
+  playlistList.innerHTML = '';
+  
+  if(!mySpotifyPlaylists.length){
+    playlistPagination.style.display = 'none';
+    return;
+  }
+  
+  const total = mySpotifyPlaylists.length;
+  const pages = Math.ceil(total / playlistPageSize);
+  
+  if(playlistCurrentPage >= pages) playlistCurrentPage = pages - 1;
+  if(playlistCurrentPage < 0) playlistCurrentPage = 0;
+  
+  const begin = playlistCurrentPage * playlistPageSize;
+  const end = Math.min(begin + playlistPageSize, total);
+  
+  // Draw playlist buttons
+  mySpotifyPlaylists.slice(begin, end).forEach(pl => {
+    const item = document.createElement('button');
+    item.type = 'button';
+    item.textContent = pl.name + (pl.owner && pl.owner.display_name ? ' — ' + pl.owner.display_name : '');
+    if(pl.description) item.title = pl.description;
+    item.className = 'playlist-choice';
+    item.onclick = async () => {
+      const playlistId = pl.id;
+      modalMessage.textContent = '';
+      await promptAndLoadPlaylistIntoStrips(playlistId);
+    };
+    playlistList.appendChild(item);
+  });
+  
+  // Handle paginator
+  playlistPagination.style.display = (pages > 1) ? 'flex' : 'none';
+  playlistPrev.disabled = (playlistCurrentPage === 0);
+  playlistNext.disabled = (playlistCurrentPage >= (pages - 1));
+  playlistPageinfo.textContent = `Page ${playlistCurrentPage + 1} / ${pages}`;
+}
+
 /* Modal wiring */
 devicesBtn.addEventListener('click', async ()=>{
   try{
@@ -575,8 +662,32 @@ devicesBtn.addEventListener('click', async ()=>{
     deviceSearch.value = '';
     selectedDeviceId = null;
     modalMessage.textContent = '';
+    
+    // Load devices
     const devs = await fetchDevices();
     renderModalDeviceList(devs);
+    
+    // Load playlists
+    playlistLoading.style.display = 'inline';
+    playlistList.innerHTML = '';
+    playlistPagination.style.display = 'none';
+    playlistCurrentPage = 0;
+    
+    try{
+      const playlists = await fetchMySpotifyPlaylists();
+      mySpotifyPlaylists = playlists;
+      playlistLoading.style.display = 'none';
+      
+      if(!playlists.length){
+        playlistLoading.textContent = 'No playlists found.';
+        playlistLoading.style.display = 'inline';
+      } else {
+        showMyPlaylistPage();
+      }
+    }catch(error){
+      playlistLoading.textContent = 'Error loading playlists.';
+      console.error('Error loading playlists:', error);
+    }
   }catch(e){
     console.error('Failed to open Devices modal', e);
     modalMessage.textContent = 'Failed to load devices: ' + (e && e.message ? e.message : e);
@@ -629,6 +740,16 @@ modalTransfer.addEventListener('click', async ()=>{
   if(!did){ modalMessage.textContent = 'Select or set a device as default to transfer.'; return; }
   modalMessage.textContent = 'Transferring...';
   try{ await transferToDevice(did); modalMessage.textContent = 'Transferred.'; } catch(e){ modalMessage.textContent = 'Transfer failed: ' + (e.message||e); console.error(e); }
+});
+
+/* Playlist pagination buttons */
+playlistPrev.addEventListener('click', ()=>{
+  playlistCurrentPage--;
+  showMyPlaylistPage();
+});
+playlistNext.addEventListener('click', ()=>{
+  playlistCurrentPage++;
+  showMyPlaylistPage();
 });
 
 /* Playlist id helper */
