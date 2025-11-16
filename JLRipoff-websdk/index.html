@@ -717,6 +717,23 @@
     margin-bottom: 8px;
     font-size: 1.05em;
   }
+  .queue-scroll-item.not-in-set {
+    background: linear-gradient(88deg, #3b2c4b 65%, #7e57c214 100%) !important;
+    border: 2.6px dashed #6d6e8c !important;
+    color: #c6bfff !important;
+    box-shadow: 0 1px 35px #8e5eea33, 0 8px 80px #48217533;
+    filter: brightness(1.09) saturate(1.03);
+    position: relative;
+  }
+  .queue-scroll-item.not-in-set .queue-scroll-title::after {
+    content: " (not in loaded set)";
+    color: #ef8ef8;
+    font-size: 0.69em;
+    margin-left: 8px;
+    font-weight: 400;
+    text-shadow: none;
+    vertical-align: super;
+  }
   </style>
 </head>
 <body>
@@ -877,14 +894,14 @@
       let el = document.getElementById("msg");
       el.style.opacity = "1";
       el.innerHTML = "";
-      if (msg) el.textContent = msg.replace(/<[^>]*>/g,''); else el.textContent = "";
+      if (msg) {
+      // Allow <b></b> and <br> tags, escape other tags:
+      el.innerHTML = msg.replace(/<(?!\/?b\b|\/?br\b)[^>]*>/gi,'');
+      }
       el.classList.toggle("error", err);
       el.style.color = err ? "#ff4187" : "#12ffc8";
       if (clearMsgTimer) clearTimeout(clearMsgTimer);
-      if (!err && msg && autoclear) {
-        clearMsgTimer = setTimeout(() => { el.style.opacity = "0"; }, 5000);
-      }
-      if (err && msg && autoclear) {
+      if (msg && autoclear) {
         clearMsgTimer = setTimeout(() => { el.style.opacity = "0"; }, 5000);
       }
     }
@@ -1333,14 +1350,31 @@
       const alb = album || albums[albIdx];
       const tr = track || (alb && alb.tracks[trIdx]);
       if (!tr) return;
+      
+      if (trackQueue.length >= 95) {
+        logMsg("Queue limit nearly reached (Spotify allows 100 max). Song not queued.", true, false);
+        return;
+      }
+      
       try {
-        await fetch(`https://api.spotify.com/v1/me/player/queue?uri=${encodeURIComponent(tr.uri)}&device_id=${playerId}`,
+        const resp = await fetch(`https://api.spotify.com/v1/me/player/queue?uri=${encodeURIComponent(tr.uri)}&device_id=${playerId}`,
           { method: "POST", headers: { Authorization: "Bearer " + token } });
+        
+        if (!resp.ok) {
+          let msg = "Failed to queue";
+          try { 
+            const err = await resp.json();
+            if (err && err.error && err.error.message) msg += ": " + err.error.message;
+          } catch {}
+          logMsg(msg, true, false);
+          return;
+        }
+        
         trackQueue.push(tr.uri);
         renderQueue();
-        logMsg(`QUEUED: ${alb ? alb.artist : ''} - ${tr.name}`, false, true);
-      } catch {
-        logMsg("Unable to add to queue.", true, false);
+        logMsg(`QUEUED: ${alb ? alb.artist : ''} — ${tr.name}`, false, true);
+      } catch (e) {
+        logMsg("Network error: Unable to add to queue.", true, false);
       }
     }
     function renderQueue() {
@@ -1348,15 +1382,27 @@
       document.getElementById("queuecount").textContent = n.toString().padStart(2, "0");
     }
     function pollNowPlaying() {
-      setInterval(async () => {
-        if (document.hidden) return; // Only poll in foreground
+      let pollIntervalMs = 15000;
+      async function poll() {
+        if (document.hidden) {
+          setTimeout(poll, pollIntervalMs);
+          return;
+        }
         try {
           const resp = await fetch("https://api.spotify.com/v1/me/player/currently-playing", {
             headers: { Authorization: "Bearer " + token }
           });
-          if (!resp.ok) return;
+          if (!resp.ok) {
+            if (resp.status === 429) pollIntervalMs = 30000; // Back off on rate limit
+            setTimeout(poll, pollIntervalMs);
+            return;
+          }
+          pollIntervalMs = 15000; // Reset to normal interval
           const dat = await resp.json();
-          if (!dat || !dat.item) return;
+          if (!dat || !dat.item) {
+            setTimeout(poll, pollIntervalMs);
+            return;
+          }
           updateNowPlaying(dat.item.uri);
           lastCurrentPlayingItem = dat.item;
           // Only refresh if the song changed:
@@ -1364,7 +1410,9 @@
             buildQueueScrollContent();
           }
         } catch {/*noop*/}
-      }, 15000); // poll every 15 seconds
+        setTimeout(poll, pollIntervalMs);
+      }
+      poll();
     }
     function updateNowPlaying(uri) {
       currentPlayingUri = uri;
@@ -1577,7 +1625,10 @@
         const queueNumber = (idx % entries.length) + 1;
         const d = document.createElement('div');
         d.className = "queue-scroll-item";
-        if (item.nowPlaying) d.classList.add('now-playing');
+        if (item.nowPlaying) {
+          d.classList.add('now-playing');
+          if (!trackMap[item.uri]) d.classList.add('not-in-set');
+        }
         if (idx !== entries.length - 1) d.style.marginBottom = "7px";
         d.innerHTML = `
           <span class="queue-pos-num" style="min-width:2.8em;display:inline-block;font-weight:800;color:#19ffe0;font-size:1.12em;text-align:right;padding-right:10px;filter:brightness(1.08)">${queueNumber}.</span>
