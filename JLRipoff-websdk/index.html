@@ -1338,7 +1338,7 @@
           { method: "POST", headers: { Authorization: "Bearer " + token } });
         trackQueue.push(tr.uri);
         renderQueue();
-        logMsg(`QUEUED: ${alb ? alb.name : ''} - ${tr.name}`, false, true);
+        logMsg(`QUEUED: ${alb ? alb.artist : ''} - ${tr.name}`, false, true);
       } catch {
         logMsg("Unable to add to queue.", true, false);
       }
