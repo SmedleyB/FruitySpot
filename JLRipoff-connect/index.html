@@ -1150,7 +1150,7 @@
       }
       trackQueue.push(trackUri);
       if (albumDetails && trackDetails) {
-        logMsg(`QUEUED: ${albumDetails.name} — ${trackDetails.name}<br><small> on <b>${selectedDeviceName||"device"}</b></small>`, false, true);
+        logMsg(`QUEUED: ${albumDetails.artist} — ${trackDetails.name}<br><small> on <b>${selectedDeviceName||"device"}</b></small>`, false, true);
       } else {
         logMsg("Queued on <b>"+(selectedDeviceName||"device")+"</b>", false, true);
       }
@@ -1239,8 +1239,8 @@
       el.style.opacity = "1";
       el.innerHTML = "";
       if (msg) {
-        // Allow <b></b>, escape other tags:
-        el.innerHTML = msg.replace(/<(?!\/?b\b)[^>]*>/g,'');
+      // Allow <b></b> and <br> tags, escape other tags:
+      el.innerHTML = msg.replace(/<(?!\/?b\b|\/?br\b)[^>]*>/gi,'');
       }
       el.classList.toggle("error", err);
       el.style.color = err ? "#ff4187" : "#12ffc8";
