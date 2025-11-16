@@ -1624,12 +1624,10 @@
         }
         if (nowPlayingEntry) entries.push(nowPlayingEntry);
       }
-      let skipNowPlaying = false;
+      // Add all entries from trackQueue
+      // Note: updateNowPlaying already removes the now-playing track from trackQueue,
+      // so we don't need to skip it here
       for (const uri of trackQueue) {
-        if (uri === currentPlayingUri && !skipNowPlaying) {
-          skipNowPlaying = true;
-          continue;
-        }
         if (trackMap[uri]) {
           entries.push({...trackMap[uri], nowPlaying: false });
         }
