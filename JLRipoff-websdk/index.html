@@ -838,6 +838,7 @@
     let lastScroll = { onEnd: null, running: false };
     let lastCurrentPlayingItem = null;
     let lastPlayerStateUri = null; // Track last URI from player_state_changed to avoid duplicate rebuilds
+    let lastProcessedUri = null; // Track last URI processed by updateNowPlaying to avoid duplicate queue operations
     // --- Playlist Modal Pagination ---
     let mySpotifyPlaylists = [];
     let playlistPageSize = 8;
@@ -1426,12 +1427,33 @@
       currentPlayingUri = uri;
       if (!uri || !trackIdxMap[uri]) {
         document.getElementById("playingcode").textContent = "____";
+        // Still update lastProcessedUri even if not in trackIdxMap
+        if (uri && uri !== lastProcessedUri) {
+          lastProcessedUri = uri;
+          // Process queue changes for not-in-set tracks too
+          if (trackQueue.length && trackQueue.includes(uri)) {
+            const count = trackQueue.reduce((n, entry) => n + (entry === uri ? 1 : 0), 0);
+            if (count === 1) {
+              const idx = trackQueue.indexOf(uri);
+              trackQueue.splice(0, idx + 1);
+              renderQueue();
+            } else if (trackQueue[0] === uri) {
+              // Only remove head if it matches
+              trackQueue.shift();
+              renderQueue();
+            }
+          }
+        }
         return;
       }
       const {albumIndex, trackIndex} = trackIdxMap[uri];
       document.getElementById("playingcode").textContent = `${ensure2(albumIndex)} ${ensure2(trackIndex+1)}`;
 
       if (!trackQueue.length) return;
+      
+      // Only process queue changes if this is a new track
+      if (uri === lastProcessedUri) return;
+      lastProcessedUri = uri;
 
       if (trackQueue[0] === uri) {
         // Normal: Now playing matches queue head, dequeue only the head
