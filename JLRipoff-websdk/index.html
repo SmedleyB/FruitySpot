@@ -1451,15 +1451,20 @@
 
       if (!trackQueue.length) return;
       
-      // Only process queue changes if this is a new track
-      if (uri === lastProcessedUri) return;
-      lastProcessedUri = uri;
-
+      // Check if this is the head of the queue - if so, always process it
       if (trackQueue[0] === uri) {
         // Normal: Now playing matches queue head, dequeue only the head
         trackQueue.shift();
         renderQueue();
-      } else if (trackQueue.includes(uri)) {
+        lastProcessedUri = uri;
+        return;
+      }
+      
+      // Only process skip-ahead if this is a new track
+      if (uri === lastProcessedUri) return;
+      lastProcessedUri = uri;
+
+      if (trackQueue.includes(uri)) {
         // Is this song unique in queue—no duplicates?
         const count = trackQueue.reduce((n, entry) => n + (entry === uri ? 1 : 0), 0);
         if (count === 1) {
