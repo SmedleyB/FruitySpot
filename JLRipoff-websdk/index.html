@@ -1451,12 +1451,14 @@
 
       if (!trackQueue.length) return;
       
-      // Check if this is the head of the queue - if so, always process it
+      // Check if this is the head of the queue - if so, process it (but only once per track)
       if (trackQueue[0] === uri) {
-        // Normal: Now playing matches queue head, dequeue only the head
-        trackQueue.shift();
-        renderQueue();
-        lastProcessedUri = uri;
+        // Only remove if we haven't already processed this URI
+        if (uri !== lastProcessedUri) {
+          trackQueue.shift();
+          renderQueue();
+          lastProcessedUri = uri;
+        }
         return;
       }
       
