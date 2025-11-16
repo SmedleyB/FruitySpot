@@ -1334,7 +1334,9 @@
           const newUri = state.track_window.current_track.uri;
           // Update lastCurrentPlayingItem for not-in-set track display
           lastCurrentPlayingItem = state.track_window.current_track;
-          updateNowPlaying(newUri);
+          // Detect if this is a fresh track change (position near 0 indicates new track)
+          const isFreshChange = state.position < 1000; // Less than 1 second means likely a new track
+          updateNowPlaying(newUri, isFreshChange);
           setPlayPauseBtn(!state.paused);
           // Only rebuild queue if URI changed AND queue modal is open
           if (queueScrollActive && newUri !== lastPlayerStateUri) {
@@ -1423,27 +1425,10 @@
       }
       poll();
     }
-    function updateNowPlaying(uri) {
+    function updateNowPlaying(uri, isFreshChange = false) {
       currentPlayingUri = uri;
       if (!uri || !trackIdxMap[uri]) {
         document.getElementById("playingcode").textContent = "____";
-        // Still update lastProcessedUri even if not in trackIdxMap
-        if (uri && uri !== lastProcessedUri) {
-          lastProcessedUri = uri;
-          // Process queue changes for not-in-set tracks too
-          if (trackQueue.length && trackQueue.includes(uri)) {
-            const count = trackQueue.reduce((n, entry) => n + (entry === uri ? 1 : 0), 0);
-            if (count === 1) {
-              const idx = trackQueue.indexOf(uri);
-              trackQueue.splice(0, idx + 1);
-              renderQueue();
-            } else if (trackQueue[0] === uri) {
-              // Only remove head if it matches
-              trackQueue.shift();
-              renderQueue();
-            }
-          }
-        }
         return;
       }
       const {albumIndex, trackIndex} = trackIdxMap[uri];
@@ -1451,18 +1436,18 @@
 
       if (!trackQueue.length) return;
       
-      // Check if this is the head of the queue - if so, process it (but only once per track)
+      // Only process queue operations on fresh track changes
+      if (!isFreshChange) return;
+      
+      // Check if this is the head of the queue - if so, remove it
       if (trackQueue[0] === uri) {
-        // Only remove if we haven't already processed this URI
-        if (uri !== lastProcessedUri) {
-          trackQueue.shift();
-          renderQueue();
-          lastProcessedUri = uri;
-        }
+        trackQueue.shift();
+        renderQueue();
+        lastProcessedUri = uri;
         return;
       }
       
-      // Only process skip-ahead if this is a new track
+      // Skip-ahead logic - only process if different from last processed
       if (uri === lastProcessedUri) return;
       lastProcessedUri = uri;
 
