@@ -1331,6 +1331,8 @@
       player.addListener('player_state_changed', state => {
         if (state && state.track_window && state.track_window.current_track) {
           const newUri = state.track_window.current_track.uri;
+          // Update lastCurrentPlayingItem for not-in-set track display
+          lastCurrentPlayingItem = state.track_window.current_track;
           updateNowPlaying(newUri);
           setPlayPauseBtn(!state.paused);
           // Only rebuild queue if URI changed AND queue modal is open
