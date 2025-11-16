@@ -717,23 +717,6 @@
     margin-bottom: 8px;
     font-size: 1.05em;
   }
-  .queue-scroll-item.not-in-set {
-    background: linear-gradient(88deg, #3b2c4b 65%, #7e57c214 100%) !important;
-    border: 2.6px dashed #6d6e8c !important;
-    color: #c6bfff !important;
-    box-shadow: 0 1px 35px #8e5eea33, 0 8px 80px #48217533;
-    filter: brightness(1.09) saturate(1.03);
-    position: relative;
-  }
-  .queue-scroll-item.not-in-set .queue-scroll-title::after {
-    content: " (not in loaded set)";
-    color: #ef8ef8;
-    font-size: 0.69em;
-    margin-left: 8px;
-    font-weight: 400;
-    text-shadow: none;
-    vertical-align: super;
-  }
   </style>
 </head>
 <body>
@@ -894,14 +877,14 @@
       let el = document.getElementById("msg");
       el.style.opacity = "1";
       el.innerHTML = "";
-      if (msg) {
-      // Allow <b></b> and <br> tags, escape other tags:
-      el.innerHTML = msg.replace(/<(?!\/?b\b|\/?br\b)[^>]*>/gi,'');
-      }
+      if (msg) el.textContent = msg.replace(/<[^>]*>/g,''); else el.textContent = "";
       el.classList.toggle("error", err);
       el.style.color = err ? "#ff4187" : "#12ffc8";
       if (clearMsgTimer) clearTimeout(clearMsgTimer);
-      if (msg && autoclear) {
+      if (!err && msg && autoclear) {
+        clearMsgTimer = setTimeout(() => { el.style.opacity = "0"; }, 5000);
+      }
+      if (err && msg && autoclear) {
         clearMsgTimer = setTimeout(() => { el.style.opacity = "0"; }, 5000);
       }
     }
@@ -1350,29 +1333,12 @@
       const alb = album || albums[albIdx];
       const tr = track || (alb && alb.tracks[trIdx]);
       if (!tr) return;
-      
-      if (trackQueue.length >= 95) {
-        logMsg("Queue limit nearly reached (Spotify allows 100 max). Song not queued.", true, false);
-        return;
-      }
-      
       try {
-        const resp = await fetch(`https://api.spotify.com/v1/me/player/queue?uri=${encodeURIComponent(tr.uri)}&device_id=${playerId}`,
+        await fetch(`https://api.spotify.com/v1/me/player/queue?uri=${encodeURIComponent(tr.uri)}&device_id=${playerId}`,
           { method: "POST", headers: { Authorization: "Bearer " + token } });
-        
-        if (!resp.ok) {
-          let msg = "Failed to queue";
-          try { 
-            const err = await resp.json();
-            if (err && err.error && err.error.message) msg += ": " + err.error.message;
-          } catch {}
-          logMsg(msg, true, false);
-          return;
-        }
-        
         trackQueue.push(tr.uri);
         renderQueue();
-        logMsg(`QUEUED: ${alb ? alb.artist : ''} — ${tr.name}`, false, true);
+        logMsg(`QUEUED: ${alb ? alb.artist : ''} - ${tr.name}`, false, true);
       } catch {
         logMsg("Unable to add to queue.", true, false);
       }
