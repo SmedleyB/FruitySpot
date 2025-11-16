@@ -1590,6 +1590,9 @@
     function exitQueueScroll() {
       queueScrollActive = false;
       document.getElementById('queue-scroll-modal').style.display = "none";
+      // Clear snapshots to force rebuild on next open
+      lastQueueSnapshot = null;
+      lastNowPlayingUri = null;
       resetInactivityTimer();
     }
     if (typeof renderQueue === "function") {
