@@ -837,6 +837,7 @@
     let queueScrollTimeout = null;
     let lastScroll = { onEnd: null, running: false };
     let lastCurrentPlayingItem = null;
+    let lastPlayerStateUri = null; // Track last URI from player_state_changed to avoid duplicate rebuilds
     // --- Playlist Modal Pagination ---
     let mySpotifyPlaylists = [];
     let playlistPageSize = 8;
@@ -1329,9 +1330,14 @@
       player.addListener('account_error', e => logMsg(e.message,true, false));
       player.addListener('player_state_changed', state => {
         if (state && state.track_window && state.track_window.current_track) {
-          updateNowPlaying(state.track_window.current_track.uri);
+          const newUri = state.track_window.current_track.uri;
+          updateNowPlaying(newUri);
           setPlayPauseBtn(!state.paused);
-          if (queueScrollActive) buildQueueScrollContent();  // <-- add this line
+          // Only rebuild queue if URI changed AND queue modal is open
+          if (queueScrollActive && newUri !== lastPlayerStateUri) {
+            lastPlayerStateUri = newUri;
+            buildQueueScrollContent();
+          }
         }
       });
       player.connect();
@@ -1569,7 +1575,6 @@
     // ---- Build & Animate Queued Songs List ----
     function buildQueueScrollContent() {
       const container = document.querySelector('.queue-scroll-items-container');
-      container.innerHTML = "";
 
       const entries = [];
       if (currentPlayingUri) {
@@ -1609,6 +1614,9 @@
       }
       lastQueueSnapshot = queueSnapshot;
       lastNowPlayingUri = currentPlayingUri;
+
+      // Clear container only after determining we need to rebuild
+      container.innerHTML = "";
 
       if (!entries.length) {
         const d = document.createElement('div');
