@@ -2174,31 +2174,67 @@
         return;
       }
       
-      // Fetch current playback state
+      // Fetch the actual queue from the Spotify device
       await checkAndRefreshTokenIfExpiring();
+      let deviceQueueData = null;
       try {
-        const resp = await fetch("https://api.spotify.com/v1/me/player/currently-playing", {
+        const queueResp = await fetch("https://api.spotify.com/v1/me/player/queue", {
           headers: { Authorization: "Bearer " + token }
         });
-        if (resp.ok) {
-          const dat = await resp.json();
-          if (dat && dat.item) {
-            updateNowPlaying(dat.item.uri);
-            lastCurrentPlayingItem = dat.item;
-          }
+        if (queueResp.ok) {
+          deviceQueueData = await queueResp.json();
         }
-      } catch { /* noop */ }
+      } catch (err) {
+        console.error("Failed to fetch device queue:", err);
+      }
 
-      // Build curate queue data from current queue
-      buildCurateQueueData();
+      // Build curate queue data from device queue
+      buildCurateQueueData(deviceQueueData);
       renderCurateQueue();
       document.getElementById("curate-queue-modal").showModal();
     };
 
     // Build the editable queue data
-    function buildCurateQueueData() {
+    function buildCurateQueueData(deviceQueueData) {
       curateQueueData = [];
       
+      // If we have device queue data from the API, use it
+      if (deviceQueueData) {
+        // Add currently playing track
+        if (deviceQueueData.currently_playing) {
+          const track = deviceQueueData.currently_playing;
+          curateQueueData.push({
+            title: track.name,
+            artist: (track.artists?.map(a => a.name).join(', ')) || '',
+            album: track.album?.name || '',
+            art: track.album?.images?.[0]?.url || '',
+            uri: track.uri,
+            isNowPlaying: true
+          });
+          // Update global state
+          currentPlayingUri = track.uri;
+          lastCurrentPlayingItem = track;
+        }
+        
+        // Add all queued tracks from the device
+        if (deviceQueueData.queue && Array.isArray(deviceQueueData.queue)) {
+          deviceQueueData.queue.forEach(track => {
+            if (track && track.uri) {
+              curateQueueData.push({
+                title: track.name,
+                artist: (track.artists?.map(a => a.name).join(', ')) || '',
+                album: track.album?.name || '',
+                art: track.album?.images?.[0]?.url || '',
+                uri: track.uri,
+                isNowPlaying: false
+              });
+            }
+          });
+        }
+        return;
+      }
+      
+      // Fallback: use local queue tracking if API call failed
       // Add currently playing track if available
       if (currentPlayingUri) {
         let nowPlayingEntry = null;
@@ -2217,7 +2253,7 @@
         if (nowPlayingEntry) curateQueueData.push(nowPlayingEntry);
       }
 
-      // Add queued tracks
+      // Add queued tracks from local tracking
       let skippedNowPlaying = false;
       for (let i = 0; i < trackQueue.length; i++) {
         const uri = trackQueue[i];
