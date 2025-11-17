@@ -763,7 +763,7 @@
   <div class="header">
     <span style="text-align:left;">SELECT: <span id="selectcode">____</span></span>
     <span>PLAYING: <span id="playingcode">____</span></span>
-    <span style="text-align:right;"><span id="queued-label" style="cursor:pointer;text-decoration:underline;text-decoration-style:dotted;" title="Click to view Spotify queue">QUEUED</span>: <span id="queuecount">00</span></span>
+    <span style="text-align:right;"><span id="queued-label" style="cursor:pointer;color:#14b8a6;" title="Click to view Spotify queue">QUEUED</span>: <span id="queuecount">00</span></span>
   </div>
   <div id="msg" aria-live="polite"></div>
   <main class="jukebox-app-viewport" id="main">
@@ -1056,6 +1056,82 @@
           el.style.opacity = 0;
           setTimeout(() => { el.style.opacity = 1; }, 90 * i + 160);
         });
+        
+        // Wait for all images to load before starting marquee
+        const images = container.querySelectorAll('img.queue-scroll-art');
+        let imagesLoaded = 0;
+        function allImagesReady() {
+          setTimeout(startFiniteMarquee, 1);
+        }
+        if (images.length === 0) allImagesReady();
+        else {
+          images.forEach(img => {
+            img.onload = img.onerror = function() {
+              imagesLoaded++;
+              if (imagesLoaded === images.length) allImagesReady();
+            }
+          });
+          setTimeout(allImagesReady, 600);
+        }
+
+        function startFiniteMarquee() {
+          if (queueScrollTimeout) {
+            clearTimeout(queueScrollTimeout);
+            queueScrollTimeout = null;
+          }
+          container.style.transition = '';
+          container.style.transform = 'translateY(0)';
+          container.removeEventListener('transitionend', lastScroll.onEnd || (()=>{}));
+          lastScroll.running = false;
+
+          function animateQueue() {
+            const scrollView = container.closest('.queue-scroll-scrollview');
+            const style = getComputedStyle(scrollView);
+            const paddingTop = parseFloat(style.paddingTop) || 0;
+            const fudge = 0;
+
+            const viewport = scrollView.clientHeight - paddingTop;
+            const maxScroll = container.scrollHeight - viewport + fudge;
+
+            if (maxScroll <= 0) {
+              container.style.transition = '';
+              container.style.transform = 'translateY(0)';
+              return;
+            }
+
+            const pixelsPerSecond = 30;
+            const duration = maxScroll / pixelsPerSecond;
+            container.style.transition = `transform ${duration}s linear`;
+            container.style.transform = `translateY(-${maxScroll}px)`;
+
+            lastScroll.running = true;
+            lastScroll.onEnd = function() {
+              container.removeEventListener('transitionend', lastScroll.onEnd);
+              lastScroll.running = false;
+              queueScrollTimeout = setTimeout(() => {
+                container.style.transition = '';
+                container.style.transform = 'translateY(0)';
+                queueScrollTimeout = setTimeout(animateQueue, QUEUE_PAUSE_MS);
+              }, QUEUE_PAUSE_MS);
+            };
+            container.addEventListener('transitionend', lastScroll.onEnd);
+          }
+
+          // Check before starting scroll
+          const scrollView = container.closest('.queue-scroll-scrollview');
+          const style = getComputedStyle(scrollView);
+          const paddingTop = parseFloat(style.paddingTop) || 0;
+          const fudge = 0;
+          const viewport = scrollView.clientHeight - paddingTop;
+          const maxScroll = container.scrollHeight - viewport + fudge;
+
+          if (maxScroll <= 0) {
+            container.style.transition = '';
+            container.style.transform = 'translateY(0)';
+            return;
+          }
+          queueScrollTimeout = setTimeout(animateQueue, QUEUE_PAUSE_MS);
+        }
       }
       
       // Exit handler
