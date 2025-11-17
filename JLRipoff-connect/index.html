@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=1080,initial-scale=1" />
-  <title>JukeLab Ripoff</title>
+  <title>JLRipoff</title>
   <link href="https://fonts.googleapis.com/css?family=Roboto+Mono:700" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/daisyui@4.12.2/dist/full.min.css" rel="stylesheet" />
   <style>
@@ -1859,7 +1859,6 @@
         return;
       }
       const container = document.querySelector('.queue-scroll-items-container');
-      container.innerHTML = "";
 
       // Build entries:
       const entries = [];
@@ -1902,6 +1901,9 @@
       }
       lastQueueSnapshot = queueSnapshot;
       lastNowPlayingUri = currentPlayingUri;
+
+      // Clear container only after determining we need to rebuild
+      container.innerHTML = "";
 
       if (!entries.length) {
         const d = document.createElement('div');
