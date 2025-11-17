@@ -757,6 +757,110 @@
     font-weight: bold;
     box-shadow: 0 2px 20px #19ffe458;
   }
+  /* ===== CURATE QUEUE MODAL STYLES ===== */
+  #curate-queue-modal .modalbox {
+    max-width: 800px;
+    width: 95vw;
+    border-radius: 24px;
+    box-shadow: 0 8px 96px #1beebf1f;
+    background: rgba(16,22,26,0.92);
+    border: 2px solid #11b8ae33;
+    padding: 2rem 2.5rem;
+  }
+  #curate-queue-list {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 10px;
+    background: linear-gradient(120deg, rgba(18,24,31,0.5) 54%, rgba(52,210,220,0.05) 100%);
+    border-radius: 12px;
+    border: 1.5px solid #11b8ae22;
+  }
+  .curate-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 12px;
+    background: linear-gradient(93deg,rgba(21,44,80,0.48) 70%,rgba(46,180,180,0.13) 100%);
+    border-radius: 12px;
+    border: 1.5px solid #32e7fc25;
+    box-shadow: 0 3px 14px #1afdcc0d;
+    cursor: grab;
+    transition: all 0.2s;
+    user-select: none;
+  }
+  .curate-item:hover {
+    border-color: #22ffe7;
+    box-shadow: 0 5px 24px #1beebf25;
+    background: linear-gradient(93deg,rgba(33,77,140,0.52) 63%,rgba(46,222,220,0.19) 100%);
+  }
+  .curate-item.dragging {
+    opacity: 0.5;
+    cursor: grabbing;
+  }
+  .curate-item.drag-over {
+    border-top: 3px solid #19ffe4;
+  }
+  .curate-drag-handle {
+    font-size: 1.3em;
+    color: #27fdee;
+    cursor: grab;
+    padding: 0 5px;
+    user-select: none;
+  }
+  .curate-item-art {
+    width: 50px;
+    height: 50px;
+    border-radius: 6px;
+    object-fit: cover;
+    background: #25282c;
+    border: 1.5px solid #2b6560;
+    box-shadow: 0 2px 12px #13ffd322;
+  }
+  .curate-item-details {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  .curate-item-title {
+    font-weight: 700;
+    color: #fafafa;
+    font-size: 1em;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .curate-item-artist {
+    font-weight: 400;
+    color: #13e2e8;
+    font-size: 0.9em;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .curate-item-remove {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: #ff4187;
+    color: white;
+    border: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 1.2em;
+    font-weight: bold;
+    transition: all 0.2s;
+    flex-shrink: 0;
+  }
+  .curate-item-remove:hover {
+    background: #ff6ba3;
+    box-shadow: 0 3px 15px #ff418777;
+  }
   </style>
 </head>
 <body>
@@ -819,6 +923,21 @@
       </div>
     </form>
   </dialog>
+  <!-- Curate Queue Modal -->
+  <dialog id="curate-queue-modal" class="modal" role="dialog" aria-modal="true" style="z-index:10500;">
+    <div class="modalbg"></div>
+    <form method="dialog" class="modalbox flex flex-col items-center" style="max-width:800px;width:95vw;min-height:500px;">
+      <h3 class="font-bold text-lg mb-3" style="color:#19ffe4;">Curate Queue</h3>
+      <div id="curate-instructions" class="text-[#27fdee] text-sm text-center mb-4 max-w-md">
+        Drag to reorder, click × to remove. Changes will create a new playlist.
+      </div>
+      <div id="curate-queue-list" style="width:100%;flex:1;overflow-y:auto;min-height:300px;max-height:400px;"></div>
+      <div class="modal-action mt-6">
+        <button type="button" class="btn btn-accent daisy-btn" id="curate-save">Save & Play</button>
+        <button type="button" class="btn btn-accent daisy-btn" id="curate-cancel">Cancel</button>
+      </div>
+    </form>
+  </dialog>
   <!-- Bottom Row -->
   <div class="bottomrow" id="bottomrow">
     <div class="playpanel" id="playpanel">
@@ -855,6 +974,7 @@
       <button id="logout" class="btn btn-accent daisy-btn" style="display:none;">Logout</button>
       <button id="chooseplaylist" class="btn btn-accent daisy-btn" style="display:none;">Playlist</button>
       <button id="choosedevice" class="btn btn-accent daisy-btn" style="display:none;">Device</button>
+      <button id="curatequeue" class="btn btn-accent daisy-btn" style="display:none;">Curate</button>
     </div>
   </div>
   <script>
@@ -1390,6 +1510,7 @@
       document.getElementById("logout").style.display = "none";
       document.getElementById("chooseplaylist").style.display = "none";
       document.getElementById("choosedevice").style.display = "none";
+      document.getElementById("curatequeue").style.display = "none";
       logMsg("Login to start.", false, false);
       // Close all modals:
       document.getElementById('queue-scroll-modal').style.display = "none";
@@ -1400,6 +1521,7 @@
       document.getElementById("logout").style.display = "";
       document.getElementById("chooseplaylist").style.display = "";
       document.getElementById("choosedevice").style.display = "";
+      document.getElementById("curatequeue").style.display = "";
       logMsg("Load a playlist to get started", false, false);
     }
     function logout() {
@@ -2034,6 +2156,300 @@
       btn.addEventListener('touchend', function() { this.blur(); });
       btn.addEventListener('mouseup', function() { this.blur(); });
     });
+
+    // ========== CURATE QUEUE FUNCTIONALITY ==========
+    let curateQueueData = []; // Working copy of queue for editing
+    let draggedElement = null;
+    let draggedIndex = -1;
+
+    // Open curate queue modal
+    document.getElementById("curatequeue").onclick = async () => {
+      if (!token) {
+        logMsg("Please login first.", true, false);
+        return;
+      }
+      
+      // Fetch current playback state
+      await checkAndRefreshTokenIfExpiring();
+      try {
+        const resp = await fetch("https://api.spotify.com/v1/me/player/currently-playing", {
+          headers: { Authorization: "Bearer " + token }
+        });
+        if (resp.ok) {
+          const dat = await resp.json();
+          if (dat && dat.item) {
+            updateNowPlaying(dat.item.uri);
+            lastCurrentPlayingItem = dat.item;
+          }
+        }
+      } catch { /* noop */ }
+
+      // Build curate queue data from current queue
+      buildCurateQueueData();
+      renderCurateQueue();
+      document.getElementById("curate-queue-modal").showModal();
+    };
+
+    // Build the editable queue data
+    function buildCurateQueueData() {
+      curateQueueData = [];
+      
+      // Add currently playing track if available
+      if (currentPlayingUri) {
+        let nowPlayingEntry = null;
+        if (trackMap[currentPlayingUri]) {
+          nowPlayingEntry = { ...trackMap[currentPlayingUri], isNowPlaying: true };
+        } else if (lastCurrentPlayingItem) {
+          nowPlayingEntry = {
+            title: lastCurrentPlayingItem.name,
+            artist: (lastCurrentPlayingItem.artists?.map(a => a.name).join(', ')) || '',
+            album: lastCurrentPlayingItem.album?.name || '',
+            art: lastCurrentPlayingItem.album?.images?.[0]?.url || '',
+            uri: currentPlayingUri,
+            isNowPlaying: true
+          };
+        }
+        if (nowPlayingEntry) curateQueueData.push(nowPlayingEntry);
+      }
+
+      // Add queued tracks
+      let skippedNowPlaying = false;
+      for (let i = 0; i < trackQueue.length; i++) {
+        const uri = trackQueue[i];
+        if (uri === currentPlayingUri && !skippedNowPlaying) {
+          skippedNowPlaying = true;
+          continue;
+        }
+        if (trackMap[uri]) {
+          curateQueueData.push({ ...trackMap[uri], isNowPlaying: false });
+        }
+      }
+    }
+
+    // Render the curate queue list
+    function renderCurateQueue() {
+      const container = document.getElementById("curate-queue-list");
+      container.innerHTML = "";
+
+      if (curateQueueData.length === 0) {
+        container.innerHTML = '<div style="text-align:center;color:#fff8;padding:40px;">Queue is empty</div>';
+        return;
+      }
+
+      curateQueueData.forEach((item, index) => {
+        const div = document.createElement("div");
+        div.className = "curate-item";
+        div.draggable = true;
+        div.dataset.index = index;
+
+        div.innerHTML = `
+          <span class="curate-drag-handle">⋮⋮</span>
+          <img class="curate-item-art" src="${item.art || ''}" alt="" />
+          <div class="curate-item-details">
+            <div class="curate-item-title">${item.title}${item.isNowPlaying ? ' <span style="color:#19ffe4;font-size:0.85em;">(Now Playing)</span>' : ''}</div>
+            <div class="curate-item-artist">${item.artist || ''}</div>
+          </div>
+          ${!item.isNowPlaying ? '<button class="curate-item-remove" title="Remove">×</button>' : ''}
+        `;
+
+        // Add drag event listeners
+        div.addEventListener("dragstart", handleDragStart);
+        div.addEventListener("dragend", handleDragEnd);
+        div.addEventListener("dragover", handleDragOver);
+        div.addEventListener("drop", handleDrop);
+        div.addEventListener("dragleave", handleDragLeave);
+
+        // Add remove button listener
+        if (!item.isNowPlaying) {
+          const removeBtn = div.querySelector(".curate-item-remove");
+          if (removeBtn) {
+            removeBtn.onclick = (e) => {
+              e.stopPropagation();
+              removeCurateItem(index);
+            };
+          }
+        }
+
+        container.appendChild(div);
+      });
+    }
+
+    // Drag and drop handlers
+    function handleDragStart(e) {
+      draggedElement = e.currentTarget;
+      draggedIndex = parseInt(draggedElement.dataset.index);
+      draggedElement.classList.add("dragging");
+      e.dataTransfer.effectAllowed = "move";
+      e.dataTransfer.setData("text/html", draggedElement.innerHTML);
+    }
+
+    function handleDragEnd(e) {
+      if (draggedElement) {
+        draggedElement.classList.remove("dragging");
+      }
+      document.querySelectorAll(".curate-item").forEach(item => {
+        item.classList.remove("drag-over");
+      });
+      draggedElement = null;
+      draggedIndex = -1;
+    }
+
+    function handleDragOver(e) {
+      if (e.preventDefault) e.preventDefault();
+      e.dataTransfer.dropEffect = "move";
+      
+      const targetElement = e.currentTarget;
+      if (targetElement !== draggedElement) {
+        targetElement.classList.add("drag-over");
+      }
+      return false;
+    }
+
+    function handleDragLeave(e) {
+      e.currentTarget.classList.remove("drag-over");
+    }
+
+    function handleDrop(e) {
+      if (e.stopPropagation) e.stopPropagation();
+      if (e.preventDefault) e.preventDefault();
+
+      const targetElement = e.currentTarget;
+      const targetIndex = parseInt(targetElement.dataset.index);
+
+      if (draggedIndex !== targetIndex && draggedIndex >= 0) {
+        // Reorder the array
+        const item = curateQueueData.splice(draggedIndex, 1)[0];
+        curateQueueData.splice(targetIndex, 0, item);
+        renderCurateQueue();
+      }
+
+      return false;
+    }
+
+    // Remove an item from the curate queue
+    function removeCurateItem(index) {
+      if (index >= 0 && index < curateQueueData.length) {
+        curateQueueData.splice(index, 1);
+        renderCurateQueue();
+      }
+    }
+
+    // Cancel curate modal
+    document.getElementById("curate-cancel").onclick = () => {
+      document.getElementById("curate-queue-modal").close();
+    };
+
+    // Save and play curated queue
+    document.getElementById("curate-save").onclick = async () => {
+      if (!token) {
+        logMsg("Not logged in.", true, false);
+        return;
+      }
+
+      if (curateQueueData.length === 0) {
+        logMsg("Queue is empty. Nothing to save.", true, false);
+        return;
+      }
+
+      logMsg("Creating curated playlist...", false, false);
+
+      try {
+        await checkAndRefreshTokenIfExpiring();
+
+        // Get user ID
+        const userResp = await fetch("https://api.spotify.com/v1/me", {
+          headers: { Authorization: "Bearer " + token }
+        });
+        if (!userResp.ok) {
+          logMsg("Failed to get user info.", true, false);
+          return;
+        }
+        const userData = await userResp.json();
+        const userId = userData.id;
+
+        // Create a new playlist
+        const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+        const playlistName = `JLRipoff Curated Queue ${timestamp}`;
+        const createResp = await fetch(`https://api.spotify.com/v1/users/${userId}/playlists`, {
+          method: "POST",
+          headers: {
+            Authorization: "Bearer " + token,
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            name: playlistName,
+            description: "Curated queue from JLRipoff",
+            public: false
+          })
+        });
+
+        if (!createResp.ok) {
+          logMsg("Failed to create playlist.", true, false);
+          return;
+        }
+
+        const newPlaylist = await createResp.json();
+        const newPlaylistId = newPlaylist.id;
+
+        // Add tracks to the playlist (excluding "now playing" item if it's first)
+        const trackUris = curateQueueData
+          .filter((item, idx) => !(idx === 0 && item.isNowPlaying))
+          .map(item => item.uri);
+
+        if (trackUris.length > 0) {
+          const addResp = await fetch(`https://api.spotify.com/v1/playlists/${newPlaylistId}/tracks`, {
+            method: "POST",
+            headers: {
+              Authorization: "Bearer " + token,
+              "Content-Type": "application/json"
+            },
+            body: JSON.stringify({ uris: trackUris })
+          });
+
+          if (!addResp.ok) {
+            logMsg("Failed to add tracks to playlist.", true, false);
+            return;
+          }
+        }
+
+        // Start playback on the new playlist
+        if (!selectedDeviceId) {
+          if (!await ensureDeviceSelected()) {
+            logMsg("No device available to start playback.", true, false);
+            return;
+          }
+        }
+
+        const playResp = await fetch(`https://api.spotify.com/v1/me/player/play?device_id=${selectedDeviceId}`, {
+          method: "PUT",
+          headers: {
+            Authorization: "Bearer " + token,
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            context_uri: `spotify:playlist:${newPlaylistId}`,
+            offset: { position: 0 }
+          })
+        });
+
+        if (!playResp.ok) {
+          logMsg("Playlist created but failed to start playback.", true, false);
+          return;
+        }
+
+        // Update local queue to match what we just played
+        trackQueue.length = 0;
+        trackQueue.push(...trackUris);
+        renderQueue();
+
+        logMsg(`Playing curated playlist: <b>${playlistName}</b>`, false, true);
+        document.getElementById("curate-queue-modal").close();
+
+      } catch (err) {
+        console.error("Error creating curated playlist:", err);
+        logMsg("Error creating curated playlist.", true, false);
+      }
+    };
   </script>
 </body>
 </html>
