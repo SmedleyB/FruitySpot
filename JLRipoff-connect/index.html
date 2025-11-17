@@ -763,7 +763,7 @@
   <div class="header">
     <span style="text-align:left;">SELECT: <span id="selectcode">____</span></span>
     <span>PLAYING: <span id="playingcode">____</span></span>
-    <span style="text-align:right;">QUEUED: <span id="queuecount">00</span></span>
+    <span style="text-align:right;"><span id="queued-label" style="cursor:pointer;text-decoration:underline;text-decoration-style:dotted;" title="Click to view Spotify queue">QUEUED</span>: <span id="queuecount">00</span></span>
   </div>
   <div id="msg" aria-live="polite"></div>
   <main class="jukebox-app-viewport" id="main">
@@ -895,7 +895,7 @@
     }
 
     // ==== Fetch queue from Spotify API ====
-    async function fetchAndRenderQueue() {
+    async function fetchSpotifyQueue() {
       await checkAndRefreshTokenIfExpiring();
       if (!token) return null;
       
@@ -915,6 +915,159 @@
         console.error("Error fetching queue:", e);
         return null;
       }
+    }
+
+    // ==== Show Spotify API Queue Modal ====
+    async function showSpotifyQueueModal() {
+      const modal = document.getElementById('queue-scroll-modal');
+      const container = document.querySelector('.queue-scroll-items-container');
+      
+      // Reset scroll position
+      if (container) {
+        container.style.transition = "";
+        container.style.transform = "translateY(0)";
+        if (queueScrollTimeout) {
+          clearTimeout(queueScrollTimeout);
+          queueScrollTimeout = null;
+        }
+        container.removeEventListener('transitionend', lastScroll.onEnd || (()=>{}));
+        lastScroll.running = false;
+      }
+      
+      modal.style.display = "flex";
+      queueScrollActive = true;
+      
+      // Fetch and render Spotify queue
+      const queueData = await fetchSpotifyQueue();
+      container.innerHTML = "";
+      
+      if (!queueData || (!queueData.currently_playing && (!queueData.queue || queueData.queue.length === 0))) {
+        const d = document.createElement('div');
+        d.className = "queue-empty-message";
+        d.textContent = queueData ? "Queue is empty" : "Unable to load queue";
+        container.appendChild(d);
+        document.getElementById('queue-badge').textContent = "00";
+      } else {
+        const entries = [];
+        
+        // Add currently playing track
+        if (queueData.currently_playing) {
+          const track = queueData.currently_playing;
+          const uri = track.uri;
+          let nowPlayingEntry = null;
+          
+          if (trackMap[uri]) {
+            nowPlayingEntry = { ...trackMap[uri], nowPlaying: true, inSet: true };
+          } else {
+            nowPlayingEntry = {
+              title: track.name,
+              artist: (track.artists?.map(a => a.name).join(', ')) || '',
+              album: track.album?.name || '',
+              art: track.album?.images?.[0]?.url || '',
+              uri: uri,
+              nowPlaying: true,
+              inSet: false
+            };
+          }
+          entries.push(nowPlayingEntry);
+        }
+        
+        // Add queued tracks
+        if (queueData.queue && queueData.queue.length > 0) {
+          for (let i = 0; i < queueData.queue.length; i++) {
+            const track = queueData.queue[i];
+            const uri = track.uri;
+            
+            if (trackMap[uri]) {
+              entries.push({ ...trackMap[uri], nowPlaying: false, queueIndex: i, inSet: true });
+            } else {
+              entries.push({
+                title: track.name,
+                artist: (track.artists?.map(a => a.name).join(', ')) || '',
+                album: track.album?.name || '',
+                art: track.album?.images?.[0]?.url || '',
+                uri: uri,
+                nowPlaying: false,
+                queueIndex: i,
+                inSet: false
+              });
+            }
+          }
+          
+          // Add limit indicator if at capacity
+          if (queueData.queue.length >= 20) {
+            entries.push({
+              title: "Queue continues beyond 20 items...",
+              artist: "Spotify API limit reached",
+              album: "Additional queued tracks not displayed",
+              art: null, // No art URL
+              uri: 'queue-limit-indicator',
+              nowPlaying: false,
+              queueIndex: -1,
+              inSet: false,
+              isLimitIndicator: true
+            });
+          }
+        }
+        
+        // Render entries
+        entries.forEach((item, idx) => {
+          const queueNumber = (idx % entries.length) + 1;
+          const d = document.createElement('div');
+          d.className = "queue-scroll-item";
+          if (item.nowPlaying) {
+            d.classList.add('now-playing');
+          }
+          if (!item.inSet) {
+            d.classList.add('not-in-set');
+          }
+          if (item.isLimitIndicator) {
+            d.style.opacity = '0.7';
+            d.style.fontStyle = 'italic';
+          }
+          if (idx !== entries.length - 1) d.style.marginBottom = "7px";
+          
+          // Handle image for limit indicator - use a placeholder or empty div
+          const artHtml = item.isLimitIndicator 
+            ? '<div class="queue-scroll-art" style="background:#333;display:flex;align-items:center;justify-content:center;color:#666;font-size:2em;">⋯</div>'
+            : `<img class="queue-scroll-art" src="${item.art || ''}" loading="lazy" />`;
+          
+          d.innerHTML = `
+            <span class="queue-pos-num" style="min-width:2.8em;display:inline-block;font-weight:800;color:#19ffe0;font-size:1.12em;text-align:right;padding-right:10px;filter:brightness(1.08)">${item.isLimitIndicator ? '...' : queueNumber + '.'}</span>
+            ${artHtml}
+            <div class="queue-scroll-details">
+              <div class="queue-scroll-title">${item.title}</div>
+              <div class="queue-scroll-artist">${item.artist || ''}</div>
+              <div class="queue-scroll-album">${item.album || ''}</div>
+            </div>
+          `;
+          container.appendChild(d);
+        });
+        
+        // Update badge
+        let badgeCount = entries.length - (entries[0]?.nowPlaying ? 1 : 0);
+        if (entries[entries.length - 1]?.isLimitIndicator) {
+          badgeCount = badgeCount - 1;
+        }
+        document.getElementById('queue-badge').textContent = badgeCount.toString().padStart(2, "0");
+        
+        // Fade in
+        Array.from(container.children).forEach((el, i) => {
+          el.style.opacity = 0;
+          setTimeout(() => { el.style.opacity = 1; }, 90 * i + 160);
+        });
+      }
+      
+      // Exit handler
+      function exitHandler(e) {
+        queueScrollActive = false;
+        modal.style.display = "none";
+        e.stopPropagation();
+        e.preventDefault();
+      }
+      modal.addEventListener('mousedown', exitHandler, { once: true });
+      modal.addEventListener('touchend', exitHandler, { once: true });
+      window.addEventListener('keydown', exitHandler, { once: true });
     }
 
     // ==== Device modal logic - IMPROVED: adds periodic polling ====
@@ -1182,6 +1335,15 @@
     document.getElementById('btn-play').onclick = playPauseToggle;
     document.getElementById('btn-prev').onclick = prevTrack;
     document.getElementById('btn-next').onclick = nextTrack;
+    
+    // Click handler for QUEUED label to show Spotify queue
+    document.getElementById('queued-label').onclick = () => {
+      if (!token) {
+        logMsg("Please login first", true, false);
+        return;
+      }
+      showSpotifyQueueModal();
+    };
 
     function finishCode() {
       if (keypadDigits.length !== 4) return;
@@ -1677,16 +1839,9 @@
         if (keypadDigits.length === 4) finishCode();
       }
     }
-    async function renderQueue() {
-      // Fetch the actual queue count from Spotify API
-      const queueData = await fetchAndRenderQueue();
-      let queueCount = 0;
-      
-      if (queueData && queueData.queue) {
-        queueCount = queueData.queue.length;
-      }
-      
-      document.getElementById("queuecount").textContent = queueCount.toString().padStart(2, "0");
+    function renderQueue() {
+      const n = trackQueue.length;
+      document.getElementById("queuecount").textContent = n.toString().padStart(2, "0");
     }
     // ==== POLLING: only poll faster if not error/429 ====
     function pollNowPlaying() {
@@ -1719,7 +1874,7 @@
             currentPlayingUri = newUri;
             lastCurrentPlayingItem = dat.item;
             updateNowPlaying(newUri, true);
-            if (queueScrollActive) await buildQueueScrollContent();
+            if (queueScrollActive) buildQueueScrollContent();
           }
         } catch {/*noop*/}
         setTimeout(poll, pollIntervalMs);
@@ -1829,38 +1984,33 @@
 
     // ---- QUEUE MODAL ----
     async function fetchAndShowQueueModal() {
-      // Always reset the timer when this is called
-      resetInactivityTimer();
-      
-      // If already open, don't do anything else.
+      // If already open, don't do anything.
       if (queueScrollActive) return;
-      
+      resetInactivityTimer();
       if (!token || typeof trackQueue === "undefined") {
         logMsg("Not logged in or app not fully initialized.", true, false);
         return; // Prevent queue modal opening
       }
+      try {
+        const resp = await fetch("https://api.spotify.com/v1/me/player/currently-playing", {
+          headers: { Authorization: "Bearer " + token }
+        });
+        if (resp.ok) {
+          const dat = await resp.json();
+          if (dat && dat.item) {
+            updateNowPlaying(dat.item.uri);
+            lastCurrentPlayingItem = dat.item;
+          }
+        }
+      } catch { /* noop */ }
       actuallyShowQueueScroll();
     }
 
-    async function actuallyShowQueueScroll() {
+    function actuallyShowQueueScroll() {
       queueScrollActive = true;
       const modal = document.getElementById('queue-scroll-modal');
       modal.style.display = "flex";
-      
-      // Ensure scroll position is reset when opening modal
-      const container = document.querySelector('.queue-scroll-items-container');
-      if (container) {
-        container.style.transition = "";
-        container.style.transform = "translateY(0)";
-        if (queueScrollTimeout) {
-          clearTimeout(queueScrollTimeout);
-          queueScrollTimeout = null;
-        }
-        container.removeEventListener('transitionend', lastScroll.onEnd || (()=>{}));
-        lastScroll.running = false;
-      }
-      
-      await buildQueueScrollContent();
+      buildQueueScrollContent();
       function exitHandler(e) {
         exitQueueScroll();
         e.stopPropagation();
@@ -1878,9 +2028,9 @@
     }
     if (typeof renderQueue === "function") {
       const origRenderQueue = renderQueue;
-      renderQueue = async function() {
-        await origRenderQueue.apply(this, arguments);
-        if (queueScrollActive) await buildQueueScrollContent();
+      renderQueue = function() {
+        origRenderQueue.apply(this, arguments);
+        if (queueScrollActive) buildQueueScrollContent();
       }
     }
 
@@ -1888,75 +2038,42 @@
     let lastNowPlayingUri = null;
 
     // ---- Build & Animate Queued Songs List ----
-    async function buildQueueScrollContent() {
+    function buildQueueScrollContent() {
+      if (typeof trackQueue === "undefined") {
+        console.error("trackQueue is not defined! (queue may be broken due to failed login or app init)");
+        return;
+      }
       const container = document.querySelector('.queue-scroll-items-container');
 
-      // Fetch queue data from Spotify API
-      const queueData = await fetchAndRenderQueue();
-      
-      // Build entries from API data:
+      // Build entries:
       const entries = [];
-      
-      // Add currently playing track
-      if (queueData && queueData.currently_playing) {
-        const track = queueData.currently_playing;
-        const uri = track.uri;
+      if (currentPlayingUri) {
         let nowPlayingEntry = null;
-        
-        if (trackMap[uri]) {
-          nowPlayingEntry = { ...trackMap[uri], nowPlaying: true, inSet: true };
-        } else {
-          // Track is not in the loaded set
+        if (trackMap[currentPlayingUri]) {
+          nowPlayingEntry = { ...trackMap[currentPlayingUri], nowPlaying: true };
+        } else if (lastCurrentPlayingItem) {
+          // fallback: synthesize data from the latest now playing item
           nowPlayingEntry = {
-            title: track.name,
-            artist: (track.artists?.map(a => a.name).join(', ')) || '',
-            album: track.album?.name || '',
-            art: track.album?.images?.[0]?.url || '',
-            uri: uri,
-            nowPlaying: true,
-            inSet: false
+            title: lastCurrentPlayingItem.name,
+            artist: (lastCurrentPlayingItem.artists?.map(a => a.name).join(', ')) || '',
+            album: lastCurrentPlayingItem.album?.name || '',
+            art: lastCurrentPlayingItem.album?.images?.[0]?.url || '',
+            uri: currentPlayingUri,
+            nowPlaying: true
           };
         }
-        entries.push(nowPlayingEntry);
+        if (nowPlayingEntry) entries.push(nowPlayingEntry);
       }
-      
-      // Add queued tracks from API
-      if (queueData && queueData.queue && queueData.queue.length > 0) {
-        for (let i = 0; i < queueData.queue.length; i++) {
-          const track = queueData.queue[i];
-          const uri = track.uri;
-          
-          if (trackMap[uri]) {
-            entries.push({ ...trackMap[uri], nowPlaying: false, queueIndex: i, inSet: true });
-          } else {
-            // Track is not in the loaded set
-            entries.push({
-              title: track.name,
-              artist: (track.artists?.map(a => a.name).join(', ')) || '',
-              album: track.album?.name || '',
-              art: track.album?.images?.[0]?.url || '',
-              uri: uri,
-              nowPlaying: false,
-              queueIndex: i,
-              inSet: false
-            });
-          }
+      let skippedNowPlaying = false;
+      for (let i = 0; i < trackQueue.length; i++) {
+        const uri = trackQueue[i];
+        if (uri === currentPlayingUri && !skippedNowPlaying) {
+          // Skip ONLY the first occurrence of the currently playing song
+          skippedNowPlaying = true;
+          continue;
         }
-        
-        // Note: Spotify API returns max 20 items in queue
-        // If we have exactly 20, there might be more that aren't shown
-        if (queueData.queue.length >= 20) {
-          entries.push({
-            title: "Queue continues beyond 20 items...",
-            artist: "Spotify API limit reached",
-            album: "Additional queued tracks not displayed",
-            art: '',
-            uri: 'queue-limit-indicator',
-            nowPlaying: false,
-            queueIndex: -1,
-            inSet: false,
-            isLimitIndicator: true
-          });
+        if (trackMap[uri]) {
+          entries.push({ ...trackMap[uri], nowPlaying: false, queueIndex: i });
         }
       }
       const queueSnapshot = entries.map(e => e.uri).join(',');
@@ -1972,16 +2089,6 @@
 
       // Clear container only after determining we need to rebuild
       container.innerHTML = "";
-      
-      // Reset scroll position and clear any ongoing animations
-      container.style.transition = "";
-      container.style.transform = "translateY(0)";
-      if (queueScrollTimeout) {
-        clearTimeout(queueScrollTimeout);
-        queueScrollTimeout = null;
-      }
-      container.removeEventListener('transitionend', lastScroll.onEnd || (()=>{}));
-      lastScroll.running = false;
 
       if (!entries.length) {
         const d = document.createElement('div');
@@ -2000,20 +2107,12 @@
         d.className = "queue-scroll-item";
         if (item.nowPlaying) {
           d.classList.add('now-playing');
-        }
-        // Add "not-in-set" class if track is not in loaded albums
-        if (!item.inSet) {
-          d.classList.add('not-in-set');
-        }
-        // Special styling for limit indicator
-        if (item.isLimitIndicator) {
-          d.style.opacity = '0.7';
-          d.style.fontStyle = 'italic';
+          if (!trackMap[item.uri]) d.classList.add('not-in-set');
         }
         if (idx !== entries.length - 1) d.style.marginBottom = "7px";
         d.innerHTML = `
-          <span class="queue-pos-num" style="min-width:2.8em;display:inline-block;font-weight:800;color:#19ffe0;font-size:1.12em;text-align:right;padding-right:10px;filter:brightness(1.08)">${item.isLimitIndicator ? '...' : queueNumber + '.'}</span>
-          <img class="queue-scroll-art" src="${item.art || ''}" loading="lazy" ${item.isLimitIndicator ? 'style="opacity:0.3"' : ''} />
+          <span class="queue-pos-num" style="min-width:2.8em;display:inline-block;font-weight:800;color:#19ffe0;font-size:1.12em;text-align:right;padding-right:10px;filter:brightness(1.08)">${queueNumber}.</span>
+          <img class="queue-scroll-art" src="${item.art || ''}" loading="lazy" />
           <div class="queue-scroll-details">
             <div class="queue-scroll-title">${item.title}</div>
             <div class="queue-scroll-artist">${item.artist || ''}</div>
@@ -2032,12 +2131,7 @@
       // Update the queue badge
       let badgeCount = 0;
       if (entries.length > 0) {
-        // Exclude now-playing track and limit indicator from count
         badgeCount = entries.length - (entries[0].nowPlaying ? 1 : 0);
-        // Check if last entry is the limit indicator and exclude it
-        if (entries[entries.length - 1]?.isLimitIndicator) {
-          badgeCount = badgeCount - 1;
-        }
       }
       document.getElementById('queue-badge').textContent =
         badgeCount.toString().padStart(2, "0");
