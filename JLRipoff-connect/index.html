@@ -1829,9 +1829,12 @@
 
     // ---- QUEUE MODAL ----
     async function fetchAndShowQueueModal() {
-      // If already open, don't do anything.
-      if (queueScrollActive) return;
+      // Always reset the timer when this is called
       resetInactivityTimer();
+      
+      // If already open, don't do anything else.
+      if (queueScrollActive) return;
+      
       if (!token || typeof trackQueue === "undefined") {
         logMsg("Not logged in or app not fully initialized.", true, false);
         return; // Prevent queue modal opening
@@ -1843,6 +1846,20 @@
       queueScrollActive = true;
       const modal = document.getElementById('queue-scroll-modal');
       modal.style.display = "flex";
+      
+      // Ensure scroll position is reset when opening modal
+      const container = document.querySelector('.queue-scroll-items-container');
+      if (container) {
+        container.style.transition = "";
+        container.style.transform = "translateY(0)";
+        if (queueScrollTimeout) {
+          clearTimeout(queueScrollTimeout);
+          queueScrollTimeout = null;
+        }
+        container.removeEventListener('transitionend', lastScroll.onEnd || (()=>{}));
+        lastScroll.running = false;
+      }
+      
       await buildQueueScrollContent();
       function exitHandler(e) {
         exitQueueScroll();
@@ -2015,7 +2032,12 @@
       // Update the queue badge
       let badgeCount = 0;
       if (entries.length > 0) {
+        // Exclude now-playing track and limit indicator from count
         badgeCount = entries.length - (entries[0].nowPlaying ? 1 : 0);
+        // Check if last entry is the limit indicator and exclude it
+        if (entries[entries.length - 1]?.isLimitIndicator) {
+          badgeCount = badgeCount - 1;
+        }
       }
       document.getElementById('queue-badge').textContent =
         badgeCount.toString().padStart(2, "0");
