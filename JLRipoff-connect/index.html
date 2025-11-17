@@ -894,6 +894,29 @@
       }
     }
 
+    // ==== Fetch queue from Spotify API ====
+    async function fetchAndRenderQueue() {
+      await checkAndRefreshTokenIfExpiring();
+      if (!token) return null;
+      
+      try {
+        const resp = await fetch("https://api.spotify.com/v1/me/player/queue", {
+          headers: { Authorization: "Bearer " + token }
+        });
+        
+        if (!resp.ok) {
+          console.warn("Failed to fetch queue from Spotify API:", resp.status);
+          return null;
+        }
+        
+        const data = await resp.json();
+        return data; // Returns { currently_playing, queue }
+      } catch (e) {
+        console.error("Error fetching queue:", e);
+        return null;
+      }
+    }
+
     // ==== Device modal logic - IMPROVED: adds periodic polling ====
     function showDeviceModal(devices) {
       const list = document.getElementById("device-list");
@@ -1654,9 +1677,16 @@
         if (keypadDigits.length === 4) finishCode();
       }
     }
-    function renderQueue() {
-      const n = trackQueue.length;
-      document.getElementById("queuecount").textContent = n.toString().padStart(2, "0");
+    async function renderQueue() {
+      // Fetch the actual queue count from Spotify API
+      const queueData = await fetchAndRenderQueue();
+      let queueCount = 0;
+      
+      if (queueData && queueData.queue) {
+        queueCount = queueData.queue.length;
+      }
+      
+      document.getElementById("queuecount").textContent = queueCount.toString().padStart(2, "0");
     }
     // ==== POLLING: only poll faster if not error/429 ====
     function pollNowPlaying() {
@@ -1689,7 +1719,7 @@
             currentPlayingUri = newUri;
             lastCurrentPlayingItem = dat.item;
             updateNowPlaying(newUri, true);
-            if (queueScrollActive) buildQueueScrollContent();
+            if (queueScrollActive) await buildQueueScrollContent();
           }
         } catch {/*noop*/}
         setTimeout(poll, pollIntervalMs);
@@ -1806,26 +1836,14 @@
         logMsg("Not logged in or app not fully initialized.", true, false);
         return; // Prevent queue modal opening
       }
-      try {
-        const resp = await fetch("https://api.spotify.com/v1/me/player/currently-playing", {
-          headers: { Authorization: "Bearer " + token }
-        });
-        if (resp.ok) {
-          const dat = await resp.json();
-          if (dat && dat.item) {
-            updateNowPlaying(dat.item.uri);
-            lastCurrentPlayingItem = dat.item;
-          }
-        }
-      } catch { /* noop */ }
       actuallyShowQueueScroll();
     }
 
-    function actuallyShowQueueScroll() {
+    async function actuallyShowQueueScroll() {
       queueScrollActive = true;
       const modal = document.getElementById('queue-scroll-modal');
       modal.style.display = "flex";
-      buildQueueScrollContent();
+      await buildQueueScrollContent();
       function exitHandler(e) {
         exitQueueScroll();
         e.stopPropagation();
@@ -1843,9 +1861,9 @@
     }
     if (typeof renderQueue === "function") {
       const origRenderQueue = renderQueue;
-      renderQueue = function() {
-        origRenderQueue.apply(this, arguments);
-        if (queueScrollActive) buildQueueScrollContent();
+      renderQueue = async function() {
+        await origRenderQueue.apply(this, arguments);
+        if (queueScrollActive) await buildQueueScrollContent();
       }
     }
 
@@ -1853,42 +1871,59 @@
     let lastNowPlayingUri = null;
 
     // ---- Build & Animate Queued Songs List ----
-    function buildQueueScrollContent() {
-      if (typeof trackQueue === "undefined") {
-        console.error("trackQueue is not defined! (queue may be broken due to failed login or app init)");
-        return;
-      }
+    async function buildQueueScrollContent() {
       const container = document.querySelector('.queue-scroll-items-container');
 
-      // Build entries:
+      // Fetch queue data from Spotify API
+      const queueData = await fetchAndRenderQueue();
+      
+      // Build entries from API data:
       const entries = [];
-      if (currentPlayingUri) {
+      
+      // Add currently playing track
+      if (queueData && queueData.currently_playing) {
+        const track = queueData.currently_playing;
+        const uri = track.uri;
         let nowPlayingEntry = null;
-        if (trackMap[currentPlayingUri]) {
-          nowPlayingEntry = { ...trackMap[currentPlayingUri], nowPlaying: true };
-        } else if (lastCurrentPlayingItem) {
-          // fallback: synthesize data from the latest now playing item
+        
+        if (trackMap[uri]) {
+          nowPlayingEntry = { ...trackMap[uri], nowPlaying: true, inSet: true };
+        } else {
+          // Track is not in the loaded set
           nowPlayingEntry = {
-            title: lastCurrentPlayingItem.name,
-            artist: (lastCurrentPlayingItem.artists?.map(a => a.name).join(', ')) || '',
-            album: lastCurrentPlayingItem.album?.name || '',
-            art: lastCurrentPlayingItem.album?.images?.[0]?.url || '',
-            uri: currentPlayingUri,
-            nowPlaying: true
+            title: track.name,
+            artist: (track.artists?.map(a => a.name).join(', ')) || '',
+            album: track.album?.name || '',
+            art: track.album?.images?.[0]?.url || '',
+            uri: uri,
+            nowPlaying: true,
+            inSet: false
           };
         }
-        if (nowPlayingEntry) entries.push(nowPlayingEntry);
+        entries.push(nowPlayingEntry);
       }
-      let skippedNowPlaying = false;
-      for (let i = 0; i < trackQueue.length; i++) {
-        const uri = trackQueue[i];
-        if (uri === currentPlayingUri && !skippedNowPlaying) {
-          // Skip ONLY the first occurrence of the currently playing song
-          skippedNowPlaying = true;
-          continue;
-        }
-        if (trackMap[uri]) {
-          entries.push({ ...trackMap[uri], nowPlaying: false, queueIndex: i });
+      
+      // Add queued tracks from API
+      if (queueData && queueData.queue && queueData.queue.length > 0) {
+        for (let i = 0; i < queueData.queue.length; i++) {
+          const track = queueData.queue[i];
+          const uri = track.uri;
+          
+          if (trackMap[uri]) {
+            entries.push({ ...trackMap[uri], nowPlaying: false, queueIndex: i, inSet: true });
+          } else {
+            // Track is not in the loaded set
+            entries.push({
+              title: track.name,
+              artist: (track.artists?.map(a => a.name).join(', ')) || '',
+              album: track.album?.name || '',
+              art: track.album?.images?.[0]?.url || '',
+              uri: uri,
+              nowPlaying: false,
+              queueIndex: i,
+              inSet: false
+            });
+          }
         }
       }
       const queueSnapshot = entries.map(e => e.uri).join(',');
@@ -1922,7 +1957,10 @@
         d.className = "queue-scroll-item";
         if (item.nowPlaying) {
           d.classList.add('now-playing');
-          if (!trackMap[item.uri]) d.classList.add('not-in-set');
+        }
+        // Add "not-in-set" class if track is not in loaded albums
+        if (!item.inSet) {
+          d.classList.add('not-in-set');
         }
         if (idx !== entries.length - 1) d.style.marginBottom = "7px";
         d.innerHTML = `
