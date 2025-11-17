@@ -353,8 +353,9 @@
     .pause .icon { margin-left: 1px; }
     .icon { pointer-events: none; }
     .keypad {
-      flex: 1 1 auto;
-      min-width: 400px;
+      position: absolute;
+      left: 50%;
+      transform: translateX(-50%);
       display: flex;
       justify-content: center;
       align-items: center;
@@ -867,7 +868,10 @@
   <div class="header">
     <span style="text-align:left;">SELECT: <span id="selectcode">____</span></span>
     <span>PLAYING: <span id="playingcode">____</span></span>
-    <span style="text-align:right;">QUEUED: <span id="queuecount">00</span></span>
+    <span style="text-align:right;display:flex;align-items:center;justify-content:flex-end;gap:12px;">
+      <button id="curatequeue" class="btn btn-accent daisy-btn" style="display:none;min-width:70px;min-height:28px;padding:5px 18px;font-size:0.95em;">Curate</button>
+      <span>QUEUED: <span id="queuecount">00</span></span>
+    </span>
   </div>
   <div id="msg" aria-live="polite"></div>
   <main class="jukebox-app-viewport" id="main">
@@ -974,7 +978,6 @@
       <button id="logout" class="btn btn-accent daisy-btn" style="display:none;">Logout</button>
       <button id="chooseplaylist" class="btn btn-accent daisy-btn" style="display:none;">Playlist</button>
       <button id="choosedevice" class="btn btn-accent daisy-btn" style="display:none;">Device</button>
-      <button id="curatequeue" class="btn btn-accent daisy-btn" style="display:none;">Curate</button>
     </div>
   </div>
   <script>
