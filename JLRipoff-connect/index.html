@@ -918,9 +918,16 @@
     }
 
     // ==== Show Spotify API Queue Modal ====
+    let spotifyQueueExitHandler = null; // Track the exit handler
+    
     async function showSpotifyQueueModal() {
       const modal = document.getElementById('queue-scroll-modal');
       const container = document.querySelector('.queue-scroll-items-container');
+      
+      // If already showing a queue, clean it up first
+      if (queueScrollActive) {
+        cleanupQueueModal();
+      }
       
       // Reset scroll position
       if (container) {
@@ -1134,16 +1141,69 @@
         }
       }
       
-      // Exit handler
-      function exitHandler(e) {
-        queueScrollActive = false;
-        modal.style.display = "none";
+      // Exit handler for Spotify queue
+      spotifyQueueExitHandler = function(e) {
+        cleanupSpotifyQueueModal();
         e.stopPropagation();
         e.preventDefault();
+      };
+      modal.addEventListener('mousedown', spotifyQueueExitHandler, { once: true });
+      modal.addEventListener('touchend', spotifyQueueExitHandler, { once: true });
+      window.addEventListener('keydown', spotifyQueueExitHandler, { once: true });
+    }
+    
+    // Cleanup function for Spotify queue modal
+    function cleanupSpotifyQueueModal() {
+      const modal = document.getElementById('queue-scroll-modal');
+      const container = document.querySelector('.queue-scroll-items-container');
+      
+      queueScrollActive = false;
+      modal.style.display = "none";
+      
+      // Clear any ongoing animations
+      if (container) {
+        container.style.transition = "";
+        container.style.transform = "translateY(0)";
       }
-      modal.addEventListener('mousedown', exitHandler, { once: true });
-      modal.addEventListener('touchend', exitHandler, { once: true });
-      window.addEventListener('keydown', exitHandler, { once: true });
+      if (queueScrollTimeout) {
+        clearTimeout(queueScrollTimeout);
+        queueScrollTimeout = null;
+      }
+      if (container) {
+        container.removeEventListener('transitionend', lastScroll.onEnd || (()=>{}));
+      }
+      lastScroll.running = false;
+      
+      // Remove event listeners if they haven't fired yet
+      if (spotifyQueueExitHandler) {
+        modal.removeEventListener('mousedown', spotifyQueueExitHandler);
+        modal.removeEventListener('touchend', spotifyQueueExitHandler);
+        window.removeEventListener('keydown', spotifyQueueExitHandler);
+        spotifyQueueExitHandler = null;
+      }
+    }
+    
+    // General cleanup function for any queue modal
+    function cleanupQueueModal() {
+      const modal = document.getElementById('queue-scroll-modal');
+      const container = document.querySelector('.queue-scroll-items-container');
+      
+      queueScrollActive = false;
+      modal.style.display = "none";
+      
+      // Clear any ongoing animations
+      if (container) {
+        container.style.transition = "";
+        container.style.transform = "translateY(0)";
+      }
+      if (queueScrollTimeout) {
+        clearTimeout(queueScrollTimeout);
+        queueScrollTimeout = null;
+      }
+      if (container) {
+        container.removeEventListener('transitionend', lastScroll.onEnd || (()=>{}));
+      }
+      lastScroll.running = false;
     }
 
     // ==== Device modal logic - IMPROVED: adds periodic polling ====
@@ -2083,6 +2143,11 @@
     }
 
     function actuallyShowQueueScroll() {
+      // If already showing a queue (e.g., Spotify API queue), clean it up first
+      if (queueScrollActive) {
+        cleanupQueueModal();
+      }
+      
       queueScrollActive = true;
       const modal = document.getElementById('queue-scroll-modal');
       modal.style.display = "flex";
@@ -2098,8 +2163,7 @@
     }
 
     function exitQueueScroll() {
-      queueScrollActive = false;
-      document.getElementById('queue-scroll-modal').style.display = "none";
+      cleanupQueueModal();
       resetInactivityTimer();
     }
     if (typeof renderQueue === "function") {
