@@ -93,7 +93,7 @@
       width: 100%;
       height: 100%;
       display: grid;
-      grid-template-columns: 1fr;
+      grid-template-columns: 1fr 1fr;
       grid-template-rows: 1fr 1fr;
       gap: var(--grid-gap);
       position: absolute;
@@ -124,11 +124,9 @@
       min-height: 0;
       box-sizing: border-box;
       overflow: hidden;
-      display: flex;
-      flex-direction: column;
-      align-items: stretch;
+      display: block;
       margin: 0;
-      padding: 0;
+      padding: 12px;
       contain: layout style paint;
     }
     .album-cell:hover,
@@ -140,20 +138,11 @@
     }
 
     .album-list {
-      flex: 1 1 auto;
-      min-width: 0;
-      display: flex;
-      flex-direction: column;
-      background: #242c3a;
-      border-radius: 0 0 16px 16px;
-      border-top: 2.5px solid rgba(25,239,244,0.15);
-      color: #f4fcff;
-      padding: 13px 4% 13px 4%;
-      box-sizing: border-box;
-      align-items: flex-start;
+      display: block;
       overflow-y: auto;
-      font-size: clamp(0.90rem, 1.1vw, 1.05rem);
       height: 100%;
+      color: #f4fcff;
+      font-size: clamp(0.85rem, 1vw, 1.0rem);
       contain: layout style paint;
     }
     .album-list::-webkit-scrollbar {
@@ -259,29 +248,22 @@
       line-height: 1.3;
     }
     .album-cov {
-      flex: 0 0 auto;
-      width: 100%;
-      height: 300px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
+      float: right;
+      width: 45%;
+      max-width: 220px;
+      margin: 0 0 12px 12px;
       background: none;
-      padding: 16px;
-      box-sizing: border-box;
     }
     .album-cov img {
       display: block;
-      width: auto;
-      height: 100%;
-      max-width: 100%;
-      max-height: 100%;
+      width: 100%;
+      height: auto;
       aspect-ratio: 1/1;
       object-fit: contain;
       border-radius: 12px;
       border: 2.5px solid rgba(27,238,191,0.6);
       background: #292929;
       box-shadow: 0 4px 16px rgba(25,255,210,0.4);
-      margin: 0 auto;
     }
     /* Disabled for performance - artPulse animation removed */
     @keyframes artPulse {
@@ -1538,9 +1520,9 @@
       const grid = document.createElement("div");
       grid.className = "main-grid";
       grid.dataset.pageidx = pageIdx;
-      const offset = pageIdx * 2;
-      for (let y = 0; y < 2; y++) {
-        const i = offset + y;
+      const offset = pageIdx * 4;
+      for (let y = 0; y < 2; y++) for (let x = 0; x < 2; x++) {
+        const i = offset + y*2+x;
         if (!albums[i]) {
           grid.appendChild(document.createElement("div"));
           continue;
@@ -1586,7 +1568,7 @@
       wrap.appendChild(newGrid);
       wrap.removeChild(prevGrid);
     }
-    function totalPages() { return Math.ceil(albums.length/2); }
+    function totalPages() { return Math.ceil(albums.length/4); }
     let animating = false;
     function gotoPage(p) {
       if (animating) return;
