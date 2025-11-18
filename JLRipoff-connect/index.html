@@ -2014,6 +2014,16 @@
       lastNowPlayingUri = currentPlayingUri;
 
       // Clear container only after determining we need to rebuild
+      // Stop any ongoing scroll animation first
+      if (queueScrollTimeout) {
+        clearTimeout(queueScrollTimeout);
+        queueScrollTimeout = null;
+      }
+      container.removeEventListener('transitionend', lastScroll.onEnd || (()=>{}));
+      container.style.transition = "";
+      container.style.transform = "translateY(0)";
+      lastScroll.running = false;
+      
       container.innerHTML = "";
 
       if (!entries.length) {
@@ -2134,9 +2144,18 @@
             container.removeEventListener('transitionend', lastScroll.onEnd);
             lastScroll.running = false;
             queueScrollTimeout = setTimeout(() => {
-              container.style.transition = '';
+              // Animate scroll back to top
+              const scrollBackDuration = Math.min(maxScroll / 60, 3); // Faster scroll back, max 3s
+              container.style.transition = `transform ${scrollBackDuration}s ease-in-out`;
               container.style.transform = 'translateY(0)';
-              queueScrollTimeout = setTimeout(animateQueue, QUEUE_PAUSE_MS);
+              
+              // Wait for scroll back to complete, then pause before next scroll
+              const scrollBackHandler = function() {
+                container.removeEventListener('transitionend', scrollBackHandler);
+                container.style.transition = '';
+                queueScrollTimeout = setTimeout(animateQueue, QUEUE_PAUSE_MS);
+              };
+              container.addEventListener('transitionend', scrollBackHandler);
             }, QUEUE_PAUSE_MS);
           };
           container.addEventListener('transitionend', lastScroll.onEnd);
