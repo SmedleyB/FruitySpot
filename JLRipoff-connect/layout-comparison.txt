@@ -1,0 +1,87 @@
+HORIZONTAL LAYOUT (index.html / index-lite.html)
+=================================================
+Screen: 1080px width (landscape)
+Grid: 2 columns × 2 rows = 4 albums per page
+
+┌──────────────────────────────────────────────────────────┐
+│                      HEADER                              │
+├──────────────────────────────────────────────────────────┤
+│                                                          │
+│  ┌──────────────────┬──────────────────┐                │
+│  │ Album 1          │ Album 2          │                │
+│  │ ┌──────┬───────┐ │ ┌──────┬───────┐ │                │
+│  │ │Track │ Album │ │ │Track │ Album │ │                │
+│  │ │List  │  Art  │ │ │List  │  Art  │ │                │
+│  │ │(trun)│       │ │ │(trun)│       │ │                │
+│  │ └──────┴───────┘ │ └──────┴───────┘ │                │
+│  ├──────────────────┼──────────────────┤                │
+│  │ Album 3          │ Album 4          │                │
+│  │ ┌──────┬───────┐ │ ┌──────┬───────┐ │                │
+│  │ │Track │ Album │ │ │Track │ Album │ │                │
+│  │ │List  │  Art  │ │ │List  │  Art  │ │                │
+│  │ │(trun)│       │ │ │(trun)│       │ │                │
+│  │ └──────┴───────┘ │ └──────┴───────┘ │                │
+│  └──────────────────┴──────────────────┘                │
+│                                                          │
+├──────────────────────────────────────────────────────────┤
+│ [Prev][Play][Next]  [Keypad...]  [Playlist][Device]    │
+└──────────────────────────────────────────────────────────┘
+
+Track names: TRUNCATED with ellipsis (...)
+Buttons: Regular size (70px min-width)
+
+
+PORTRAIT LAYOUT (index-portrait.html / index-lite-portrait.html)
+==================================================================
+Screen: 1080px width × 1920px height (portrait)
+Grid: 1 column × 2 rows = 2 albums per page
+
+┌────────────────────────────────┐
+│          HEADER                │
+├────────────────────────────────┤
+│                                │
+│  ┌──────────────────────────┐  │
+│  │ Album 1                  │  │
+│  │ ┌──────────────────────┐ │  │
+│  │ │                      │ │  │
+│  │ │    Album Art         │ │  │
+│  │ │    (on top)          │ │  │
+│  │ │                      │ │  │
+│  │ └──────────────────────┘ │  │
+│  │ ┌──────────────────────┐ │  │
+│  │ │ 01  Track name that  │ │  │
+│  │ │     wraps to next    │ │  │
+│  │ │     line naturally   │ │  │
+│  │ │ 02  Another track    │ │  │
+│  │ │ 03  Long song name   │ │  │
+│  │ │     can wrap around  │ │  │
+│  │ │ ...                  │ │  │
+│  │ └──────────────────────┘ │  │
+│  └──────────────────────────┘  │
+│  ┌──────────────────────────┐  │
+│  │ Album 2                  │  │
+│  │ ┌──────────────────────┐ │  │
+│  │ │    Album Art         │ │  │
+│  │ └──────────────────────┘ │  │
+│  │ ┌──────────────────────┐ │  │
+│  │ │ Track List (wraps)   │ │  │
+│  │ └──────────────────────┘ │  │
+│  └──────────────────────────┘  │
+│                                │
+├────────────────────────────────┤
+│ [◀][▶][⏯] [Keypad] [Smaller] │
+└────────────────────────────────┘
+
+Track names: WRAPPED to multiple lines
+Buttons: Compact size (55px min-width)
+
+
+KEY DIFFERENCES:
+================
+1. Grid Layout:    4 albums → 2 albums per page
+2. Album Flow:     Side-by-side → Stacked vertically  
+3. Art Position:   Right side → Top
+4. Track Position: Left side → Bottom
+5. Track Names:    Truncated → Wrapped
+6. Buttons:        70px → 55px (-21%)
+7. Pages:          Fewer → More (but more space each)
