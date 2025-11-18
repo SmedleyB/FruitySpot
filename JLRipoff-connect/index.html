@@ -1887,6 +1887,7 @@
 
     let lastQueueSnapshot = null;
     let lastNowPlayingUri = null;
+    let forceScrollRestart = false; // Flag to force scroll restart even if content unchanged
 
     // ---- Build & Animate Queued Songs List ----
     async function buildQueueScrollContent() {
@@ -2010,12 +2011,14 @@
       
       const queueSnapshot = entries.map(e => e.uri).join(',');
       if (
+        !forceScrollRestart && // Allow bypassing this check
         queueSnapshot === lastQueueSnapshot &&
         currentPlayingUri === lastNowPlayingUri &&
         container.children.length > 0 // guards against first render!
       ) {
         return; // Don't rebuild, nothing has changed.
       }
+      forceScrollRestart = false; // Reset flag after use
       lastQueueSnapshot = queueSnapshot;
       lastNowPlayingUri = currentPlayingUri;
 
@@ -2209,6 +2212,8 @@
             
             // Restart animation after a brief delay
             setTimeout(() => {
+              // Set flag to force scroll restart even if content hasn't changed
+              forceScrollRestart = true;
               const images = container.querySelectorAll('img.queue-scroll-art');
               let imagesLoaded = 0;
               function allImagesReady() {
