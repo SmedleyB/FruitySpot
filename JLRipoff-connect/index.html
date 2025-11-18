@@ -2187,47 +2187,54 @@
     // Handle tab visibility changes - reset scroll if queue modal is open and stuck
     document.addEventListener('visibilitychange', function() {
       if (!document.hidden && queueScrollActive) {
-        // Tab became visible again - check if scroll is stuck
+        // Tab became visible again - check if scroll is stuck or needs reset
         const container = document.querySelector('.queue-scroll-items-container');
-        if (container && lastScroll.running) {
-          // Animation was running when tab was hidden, it's now stuck
-          // Reset and restart the animation
-          if (queueScrollTimeout) {
-            clearTimeout(queueScrollTimeout);
-            queueScrollTimeout = null;
-          }
-          container.removeEventListener('transitionend', lastScroll.onEnd || (()=>{}));
-          container.style.transition = '';
-          container.style.transform = 'translateY(0)';
-          lastScroll.running = false;
+        if (container) {
+          // Check if the scroll position is not at the top (stuck somewhere in the middle/bottom)
+          const currentTransform = container.style.transform;
+          const isNotAtTop = currentTransform && currentTransform !== 'translateY(0)' && currentTransform !== 'translateY(0px)';
           
-          // Restart animation after a brief delay
-          setTimeout(() => {
-            const images = container.querySelectorAll('img.queue-scroll-art');
-            let imagesLoaded = 0;
-            function allImagesReady() {
-              // Find and call startFiniteMarquee if it exists in scope
-              // Since we can't directly access the nested function, we'll trigger a rebuild
-              if (queueScrollActive) {
-                buildQueueScrollContent();
-              }
+          // If animation was running OR scroll is not at top, reset it
+          if (lastScroll.running || isNotAtTop) {
+            // Animation was running when tab was hidden, or it's stuck at a position
+            // Reset and restart the animation
+            if (queueScrollTimeout) {
+              clearTimeout(queueScrollTimeout);
+              queueScrollTimeout = null;
             }
-            if (images.length === 0) allImagesReady();
-            else {
-              images.forEach(img => {
-                if (img.complete) {
-                  imagesLoaded++;
-                  if (imagesLoaded === images.length) allImagesReady();
-                } else {
-                  img.onload = img.onerror = function() {
+            container.removeEventListener('transitionend', lastScroll.onEnd || (()=>{}));
+            container.style.transition = '';
+            container.style.transform = 'translateY(0)';
+            lastScroll.running = false;
+            
+            // Restart animation after a brief delay
+            setTimeout(() => {
+              const images = container.querySelectorAll('img.queue-scroll-art');
+              let imagesLoaded = 0;
+              function allImagesReady() {
+                // Find and call startFiniteMarquee if it exists in scope
+                // Since we can't directly access the nested function, we'll trigger a rebuild
+                if (queueScrollActive) {
+                  buildQueueScrollContent();
+                }
+              }
+              if (images.length === 0) allImagesReady();
+              else {
+                images.forEach(img => {
+                  if (img.complete) {
                     imagesLoaded++;
                     if (imagesLoaded === images.length) allImagesReady();
+                  } else {
+                    img.onload = img.onerror = function() {
+                      imagesLoaded++;
+                      if (imagesLoaded === images.length) allImagesReady();
+                    }
                   }
-                }
-              });
-              setTimeout(allImagesReady, 300);
-            }
-          }, 100);
+                });
+                setTimeout(allImagesReady, 300);
+              }
+            }, 100);
+          }
         }
       }
     });
