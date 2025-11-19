@@ -85,7 +85,7 @@
       height: 100%;
       position: relative;
       box-sizing: border-box;
-      padding: 32px 32px;
+      padding: 24px 24px;
       overflow: hidden;
       /* Fancy gradient background similar to modal */
       background: linear-gradient(120deg, rgba(18,24,31,0.92) 54%, rgba(52,210,220,0.09) 100%);
@@ -100,7 +100,12 @@
       grid-template-rows: 1fr 1fr;
       gap: var(--grid-gap);
       position: absolute;
-      top: 0; left: 0;
+      top: 24px; 
+      left: 24px;
+      right: 24px;
+      bottom: 24px;
+      width: calc(100% - 48px);
+      height: calc(100% - 48px);
       z-index: 1;
       background: linear-gradient(104deg,rgba(28,38,52,0.42) 70%,rgba(46,180,180,0.10) 100%);
       border-radius: 24px;
@@ -128,10 +133,9 @@
       min-height: 0;
       box-sizing: border-box;
       overflow: hidden;
-      display: flex;
-      flex-direction: column;
+      display: block;
       margin: 0;
-      padding: 0;
+      padding: 12px;
     }
     .album-cell:hover,
     .album-cell:focus-within {
@@ -144,44 +148,43 @@
     .album-list {
       display: block;
       width: 100%;
-      flex: 1 1 auto;
-      overflow-y: auto;
+      height: 100%;
+      overflow: hidden;
       background: linear-gradient(100deg, #242c3a 82%, #21d0d510 100%);
-      border-radius: 16px 16px 0 0;
+      border-radius: 12px;
       color: #f4fcff;
-      padding: 13px 2.8%;
+      padding: 10px 2.5%;
+      padding-right: 230px;
       box-sizing: border-box;
-      font-size: clamp(0.85rem, 1vw, 1.01rem);
+      font-size: clamp(0.75rem, 0.9vw, 0.88rem);
     }
     .album-list::-webkit-scrollbar {
-      width: 8px;
-      background: #252b35;
-      border-radius: 7px;
+      display: none;
     }
-    .album-list::-webkit-scrollbar-thumb {
-      background: #39405c;
-      border-radius: 7px;
+    .album-list {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
     }
 
     .album-info-header {
       display:flex;
       align-items:baseline;
-      gap: 11px;
-      margin-bottom: 3px;
+      gap: 8px;
+      margin-bottom: 2px;
       margin-top:0;
     }
     .albnum {
-      font-size: 1.04em;
+      font-size: 0.95em;
       font-weight: 900;
-      min-width: 2.2em;
-      padding: 5px 16px;
+      min-width: 2em;
+      padding: 3px 12px;
       background: #151f3ad0;
       color: #26ffd7;
-      border-radius: 13px;
-      margin-right: 2px;
-      letter-spacing: 0.02em;
+      border-radius: 10px;
+      margin-right: 1px;
+      letter-spacing: 0.01em;
       text-align: center;
-      line-height: 1.18;
+      line-height: 1.1;
       box-shadow: 0 3px 17px #09feff36, 0 2px 13px #14eae832;
       border: 2.3px solid #13f3e4;
       filter: brightness(1.15) saturate(1.1);
@@ -192,11 +195,11 @@
 
     .album-title {
       color: #30fae4;
-      font-size: 1.11em;
+      font-size: 1em;
       font-weight: bold;
       margin-bottom: 0;
       margin-top: 0;
-      letter-spacing: 0.03em;
+      letter-spacing: 0.02em;
       word-break: break-word;
       display: inline-block;
       line-height: 1;
@@ -205,12 +208,12 @@
     }
     .album-artist {
       color: #13e2e8;
-      font-size: 0.97em;
+      font-size: 0.88em;
       font-weight: normal;
-      margin-top: 1px;
-      margin-bottom: 7px;
+      margin-top: 0px;
+      margin-bottom: 4px;
       display: block;
-      margin-left: 1.2em;
+      margin-left: 1em;
       word-break: break-word;
       white-space: pre-line;
       padding-left: 1px;
@@ -218,31 +221,31 @@
       text-shadow: 0 2px 10px #1cdbe922;
     }
     .track-row {
-      border-left: 3.5px solid #14fbe222;
-      margin-bottom: 6px !important;
-      line-height: 1.22 !important;
-      font-size: 0.97em;
+      border-left: 3px solid #14fbe222;
+      margin-bottom: 3px !important;
+      line-height: 1.15 !important;
+      font-size: 0.95em;
       display: block;
       max-width: 100%;
-      padding-left: 7px;
-      padding-top: 4px;
-      padding-bottom: 4px;
-      padding-right: 7px;
+      padding-left: 6px;
+      padding-top: 2px;
+      padding-bottom: 2px;
+      padding-right: 6px;
       background: linear-gradient(97deg,rgba(32,66,94,0.13) 62%,rgba(46,180,180,0.07) 100%);
-      border-radius: 7px 17px 13px 7px;
+      border-radius: 6px 14px 11px 6px;
       box-shadow: 0 2px 10px #13efd71a;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
     }
     .tracknum {
-      font-size: 0.80em !important;
-      padding: 3px 13px;
-      margin-right: 8px !important;
-      min-width: 2em;
+      font-size: 0.75em !important;
+      padding: 2px 10px;
+      margin-right: 6px !important;
+      min-width: 1.8em;
       background: #1fa7be;
       color: #f0fffd;
-      border-radius: 13px;
+      border-radius: 10px;
       font-weight: 800;
       box-shadow: 0 2px 7px #21fdc871, 0 1px 8px #2dd8f844;
       border: 1.7px solid #17f9d4ee;
@@ -253,28 +256,26 @@
       display: inline;
       color: #fafafa;
       font-weight: 600;
-      letter-spacing: 0.01em;
+      letter-spacing: 0.005em;
       text-shadow: 0 1px 8px #12fffe38;
-      line-height: 1.3;
+      line-height: 1.2;
       vertical-align: baseline;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
     }
     .album-cov {
-      position: relative;
-      bottom: 0;
-      right: 0;
-      width: 100%;
-      height: 300px;
-      flex: 0 0 300px;
-      background: linear-gradient(135deg, rgba(18,44,80,0.7) 40%, rgba(46,180,180,0.4) 100%);
-      border-radius: 0 0 12px 12px;
-      padding: 12px;
-      box-shadow: 0 -4px 24px rgba(27,238,191,0.3);
-      border: none;
-      border-top: 2px solid rgba(33,255,233,0.4);
-      z-index: 1;
+      position: absolute;
+      bottom: 12px;
+      right: 12px;
+      width: 200px;
+      height: 200px;
+      background: linear-gradient(135deg, rgba(18,44,80,0.85) 0%, rgba(52,210,220,0.3) 100%);
+      border-radius: 12px;
+      padding: 8px;
+      box-shadow: 0 2px 16px rgba(27,238,191,0.25);
+      border: 1px solid rgba(33,255,233,0.3);
+      z-index: 2;
       pointer-events: none;
       display: flex;
       align-items: center;
@@ -282,17 +283,19 @@
     }
     .album-cov img {
       display: block;
-      width: auto;
+      width: 100%;
       height: 100%;
       max-width: 100%;
+      max-height: 100%;
       aspect-ratio: 1/1;
       object-fit: contain;
       border-radius: 8px;
-      border: 2.5px solid #1beebf85;
+      border: 1.5px solid rgba(27,238,191,0.5);
       background: #292929;
-      box-shadow: 0 4px 26px #19ffd2b0, 0 2px 18px #27aaff25;
+      box-shadow: 0 2px 12px #19ffd2b0, 0 1px 8px #27aaff25;
       animation: artPulse 2.46s cubic-bezier(.7,0,.55,1) infinite alternate;
       pointer-events: auto;
+    }
     }
     @keyframes artPulse {
       from { filter: brightness(1.03); }
@@ -1574,14 +1577,14 @@
       const grid = document.createElement("div");
       grid.className = "main-grid";
       grid.dataset.pageidx = pageIdx;
-      const offset = pageIdx * 4;
-      for (let y = 0; y < 2; y++) for (let x = 0; x < 2; x++) {
-        const i = offset + y*2+x;
-        if (!albums[i]) {
+      const offset = pageIdx * 2;
+      for (let i = 0; i < 2; i++) {
+        const albumIdx = offset + i;
+        if (!albums[albumIdx]) {
           grid.appendChild(document.createElement("div"));
           continue;
         }
-        const alb = albums[i], cell = document.createElement("div");
+        const alb = albums[albumIdx], cell = document.createElement("div");
         cell.className = "album-cell";
         const cov = document.createElement("div");
         cov.className = "album-cov";
@@ -1590,7 +1593,7 @@
         leftpanel.className = "album-list scrollable";
         let lefthtml = `
           <div class="album-info-header">
-            <span class="albnum">${ensure2(i)}</span>
+            <span class="albnum">${ensure2(albumIdx)}</span>
             <span class="album-title">${alb.name}</span>
           </div>
           <div>
@@ -1622,7 +1625,7 @@
       wrap.appendChild(newGrid);
       wrap.removeChild(prevGrid);
     }
-    function totalPages() { return Math.ceil(albums.length/4); }
+    function totalPages() { return Math.ceil(albums.length/2); }
     let animating = false;
     function gotoPage(p) {
       if (animating) return;
