@@ -855,9 +855,9 @@
     </div>
     <div class="cornerpanel" id="cornerpanel">
       <button id="login" class="btn btn-success daisy-btn">Login</button>
-      <button id="logout" class="btn btn-accent daisy-btn" style="display:none;">Logout</button>
       <button id="chooseplaylist" class="btn btn-accent daisy-btn" style="display:none;">Playlist</button>
       <button id="choosedevice" class="btn btn-accent daisy-btn" style="display:none;">Device</button>
+      <button id="logout" class="btn btn-accent daisy-btn" style="display:none;">Logout</button>
     </div>
   </div>
   <script>
@@ -1577,8 +1577,8 @@
       const grid = document.createElement("div");
       grid.className = "main-grid";
       grid.dataset.pageidx = pageIdx;
-      const offset = pageIdx * 2;
-      for (let i = 0; i < 2; i++) {
+      const offset = pageIdx * 3;
+      for (let i = 0; i < 3; i++) {
         const albumIdx = offset + i;
         if (!albums[albumIdx]) {
           grid.appendChild(document.createElement("div"));
@@ -1600,7 +1600,7 @@
             <span class="album-artist">${alb.artist}</span>
           </div>
         `;
-        alb.tracks.slice(0, 25).forEach((track, tix) => {
+        alb.tracks.slice(0, 20).forEach((track, tix) => {
           lefthtml += `<div class="track-row"><span class="tracknum">${ensure2(tix+1)}</span>
             <span class="track-title">${track.name}</span></div>`;
         });
@@ -1625,7 +1625,7 @@
       wrap.appendChild(newGrid);
       wrap.removeChild(prevGrid);
     }
-    function totalPages() { return Math.ceil(albums.length/2); }
+    function totalPages() { return Math.ceil(albums.length/3); }
     let animating = false;
     function gotoPage(p) {
       if (animating) return;
