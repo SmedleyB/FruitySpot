@@ -124,11 +124,9 @@
       min-height: 0;
       box-sizing: border-box;
       overflow: hidden;
-      display: flex;
-      flex-direction: row;
-      align-items: stretch;
+      display: block;
       margin: 0;
-      padding: 0;
+      padding: 12px;
       contain: layout style paint;
     }
     .album-cell:hover,
@@ -140,20 +138,10 @@
     }
 
     .album-list {
-      flex: 1 1 auto;
-      min-width: 0;
-      display: flex;
-      flex-direction: column;
-      background: #242c3a;
-      border-radius: 16px 0 0 16px;
-      border-right: 2.5px solid rgba(25,239,244,0.15);
+      display: block;
+      width: 100%;
       color: #f4fcff;
-      padding: 13px 2% 13px 2.8%;
-      box-sizing: border-box;
-      align-items: flex-start;
-      overflow-y: auto;
       font-size: clamp(0.85rem, 1vw, 1.01rem);
-      height: 100%;
       contain: layout style paint;
     }
     .album-list::-webkit-scrollbar {
@@ -222,14 +210,15 @@
       font-size: 0.97em;
       white-space: normal;
       overflow: visible;
-      display: flex;
-      align-items: flex-start;
+      display: block;
       max-width: 100%;
       padding-left: 7px;
       padding-top: 4px;
       padding-bottom: 4px;
+      padding-right: 7px;
       background: rgba(32,66,94,0.15);
       border-radius: 7px 17px 13px 7px;
+      clear: none;
     }
     .tracknum {
       font-size: 0.80em !important;
@@ -242,44 +231,38 @@
       font-weight: 800;
       box-shadow: 0 2px 6px rgba(33,253,200,0.4);
       border: 1.7px solid #17f9d4ee;
-      vertical-align: top;
+      vertical-align: baseline;
       display: inline-block;
-      flex-shrink: 0;
-      align-self: flex-start;
     }
     .track-title {
       white-space: normal;
       word-wrap: break-word;
       overflow-wrap: break-word;
       display: inline;
-      flex: 1;
       color: #fafafa;
       font-weight: 600;
       letter-spacing: 0.01em;
       line-height: 1.3;
+      vertical-align: baseline;
     }
     .album-cov {
-      flex: 0 1 350px;
-      min-width: 100px;
-      max-width: 440px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
+      float: right;
+      width: 180px;
+      height: 180px;
+      margin: 0 0 8px 12px;
       background: none;
+      clear: none;
     }
     .album-cov img {
       display: block;
-      width: 96%;
-      height: auto;
-      max-width: 400px;
-      max-height: 90%;
+      width: 100%;
+      height: 100%;
       aspect-ratio: 1/1;
       object-fit: contain;
       border-radius: 12px;
       border: 2.5px solid rgba(27,238,191,0.6);
       background: #292929;
       box-shadow: 0 4px 16px rgba(25,255,210,0.4);
-      margin: 0 auto;
     }
     /* Disabled for performance - artPulse animation removed */
     @keyframes artPulse {
