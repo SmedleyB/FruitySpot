@@ -8,8 +8,8 @@ This document provides a complete overview of all JLRipoff-connect versions and 
 |------|--------|--------------|---------|----------|
 | **index.html** | Horizontal (2x2 grid) | Full effects | Landscape | Modern hardware, desktop monitors |
 | **index-lite.html** | Horizontal (2x2 grid) | Performance | Landscape | Intel HD 4600, older systems |
-| **index-portrait.html** | Vertical (1x2 grid) | Full effects | Portrait (1080x1920) | Modern hardware, vertical displays |
-| **index-lite-portrait.html** | Vertical (1x2 grid) | Performance | Portrait (1080x1920) | Older hardware, vertical displays |
+| **index-portrait.html** | Vertical (1x3 grid) | Full effects | Portrait (1080x1920) | Modern hardware, vertical displays |
+| **index-lite-portrait.html** | Vertical (1x3 grid) | Performance | Portrait (1080x1920) | Older hardware, vertical displays |
 
 ## Quick Selection Guide
 
@@ -54,16 +54,9 @@ This document provides a complete overview of all JLRipoff-connect versions and 
 ### Portrait Versions (index-portrait.html / index-lite-portrait.html)
 
 **Layout:**
-- 1×2 grid (2 albums per page)
+- 1×3 grid (3 albums per page)
 - Albums stacked vertically
-- Album art on top, track list below
 - Optimized for 1080×1920 displays
-
-**Features:**
-- Track names wrap to multiple lines
-- Smaller button sizes (55px min-width, -21%)
-- More pages but more space per album
-- Vertical-friendly navigation
 
 **Best For:**
 - Rotated monitors in portrait mode
