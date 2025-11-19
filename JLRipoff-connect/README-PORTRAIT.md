@@ -17,7 +17,7 @@ The JLRipoff-connect interface now includes portrait/vertical layout versions op
 ## Portrait Layout Features
 
 ### 1. Vertical Grid Layout
-- **Single-column grid** showing 2 albums at a time (vs. 4 in horizontal)
+- **Single-column grid** showing 3 albums at a time (vs. 4 in horizontal)
 - Albums displayed vertically in a stack
 - More pages to navigate through, but each album gets more screen space
 
