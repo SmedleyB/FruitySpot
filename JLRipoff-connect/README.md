@@ -25,7 +25,7 @@ Reference FruitySpot readme (https://github.com/SmedleyB/FruitySpot/blob/main/Fr
 This folder contains **four** versions of JLRipoff to suit different needs:
 
 ### Standard Versions
-- **index.html** - Full desktop layout (1×3 grid) with all visual effects and animations
+- **index.html** - Full desktop layout (2x2 grid) with all visual effects and animations
 - **index-portrait.html** - Portrait-optimized layout (2×2 grid) with vertical album cards, touch-friendly footer, and configurable cover art sizing
 
 ### Lite (Performance-Optimized) Versions
