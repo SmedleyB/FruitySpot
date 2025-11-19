@@ -149,6 +149,7 @@
       border-radius: 16px;
       color: #f4fcff;
       padding: 13px 2% 13px 2.8%;
+      padding-right: 210px;
       box-sizing: border-box;
       font-size: clamp(0.85rem, 1vw, 1.01rem);
     }
@@ -276,7 +277,7 @@
     }
     .album-cov {
       position: absolute;
-      top: 10px;
+      top: 35%;
       right: 10px;
       width: 180px;
       height: 180px;
@@ -285,6 +286,8 @@
       padding: 8px;
       box-shadow: 0 4px 24px rgba(27,238,191,0.3);
       border: 2px solid rgba(33,255,233,0.4);
+      z-index: 1;
+      pointer-events: none;
     }
     .album-cov img {
       display: block;
@@ -297,6 +300,7 @@
       background: #292929;
       box-shadow: 0 4px 26px #19ffd2b0, 0 2px 18px #27aaff25;
       animation: artPulse 2.46s cubic-bezier(.7,0,.55,1) infinite alternate;
+      pointer-events: auto;
     }
     @keyframes artPulse {
       from { filter: brightness(1.03); }
@@ -1602,10 +1606,10 @@
           </div>
         `;
         alb.tracks.slice(0, 25).forEach((track, tix) => {
-          // Tracks 0-2: above album art (truncate)
-          // Tracks 3-6: next to album art (wrap)
-          // Tracks 7+: below album art (truncate)
-          const trackClass = (tix >= 3 && tix <= 6) ? 'track-row wrap-track' : 'track-row truncate-track';
+          // Tracks 0-3: above album art (truncate)
+          // Tracks 4-10: next to album art (wrap to avoid obscuring)
+          // Tracks 11+: below album art (truncate)
+          const trackClass = (tix >= 4 && tix <= 10) ? 'track-row wrap-track' : 'track-row truncate-track';
           lefthtml += `<div class="${trackClass}"><span class="tracknum">${ensure2(tix+1)}</span>
             <span class="track-title">${track.name}</span></div>`;
         });
