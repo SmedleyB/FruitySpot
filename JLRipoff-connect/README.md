@@ -20,7 +20,23 @@ Since this is the Connect version, it does require a local Spotify device (run S
 Reference FruitySpot readme (https://github.com/SmedleyB/FruitySpot/blob/main/FruitySpot/README.md) for general usage.
 <br>
 <br>
-You must edit these 2 lines as needed in your chosen version (**index.html**, **index-lite.html**, **index-portrait.html**, or **index-lite-portrait.html**) before running:
+## Available Versions
+
+This folder contains **four** versions of JLRipoff to suit different needs:
+
+### Standard Versions
+- **index.html** - Full desktop layout (2x2 grid) with all visual effects and animations
+- **index-portrait.html** - Portrait-optimized layout (2×2 grid) with vertical album cards, touch-friendly footer, and configurable cover art sizing
+
+### Lite (Performance-Optimized) Versions
+- **index-lite.html** - Desktop layout optimized for lower-end devices (simplified visuals, better performance)
+- **index-lite-portrait.html** - Portrait layout with performance optimizations
+
+**Key differences:**
+- **Portrait versions** use a 2×2 grid (4 albums per page) with vertical album cards (cover art on top, tracks below). The footer has a two-row design with larger buttons for better touch targeting. Cover art height is configurable via CSS variable `--cover-height` (default 240px).
+- **Lite versions** have simplified gradients, shadows, and removed visual effects (backdrop-filter, text-shadow, blur) for better rendering performance on lower-end devices.
+
+You must edit these 2 lines as needed in your chosen version before running:
 
 
 ```

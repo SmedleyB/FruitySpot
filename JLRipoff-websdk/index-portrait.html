@@ -16,13 +16,14 @@
       --main-bg: #000000;
       --main-fg: #dadada;
       --header-height: 38px;
-      --footer-height: 60px;
+      --footer-height: 100px;
       --grid-gap: 18px;
+      --cover-height: 240px;
     }
-    html, body { width: 1080px; max-width: 1080px; min-height: 1920px; background: var(--main-bg); color: var(--main-fg); font-family: "Roboto Mono", "Consolas", monospace; margin: 0; padding: 0; box-sizing: border-box; height: 100vh; overflow: hidden;}
+    html, body { min-width: 1080px; min-height: 100vh; background: var(--main-bg); color: var(--main-fg); font-family: "Roboto Mono", "Consolas", monospace; margin: 0; padding: 0; box-sizing: border-box; height: 100vh; width: 100vw; overflow: hidden;}
     .header {
       position: fixed;
-      top: 0; left: 0; width: 1080px;
+      top: 0; left: 0; width: 100vw;
       height: var(--header-height);
       z-index: 100;
       background: #18191a;
@@ -33,6 +34,7 @@
       letter-spacing: 1.5px;
       padding: 0 30px;
       border-bottom: 1.5px solid #262b32;
+      min-width: 1080px;
       user-select: none;
     }
     .header span { flex: 1 1 0; text-align: center; }
@@ -71,7 +73,8 @@
       top: var(--header-height);
       bottom: var(--footer-height);
       height: calc(100vh - var(--header-height) - var(--footer-height));
-      width: 1080px;
+      width: 100vw;
+      min-width: 1080px;
       min-height: 360px;
       display: flex;
       justify-content: center;
@@ -86,7 +89,7 @@
       height: 100%;
       position: relative;
       box-sizing: border-box;
-      padding: 32px 32px;
+      padding: 24px 24px;
       overflow: hidden;
       /* Fancy gradient background similar to modal */
       background: linear-gradient(120deg, rgba(18,24,31,0.92) 54%, rgba(52,210,220,0.09) 100%);
@@ -97,8 +100,8 @@
       width: 100%;
       height: 100%;
       display: grid;
-      grid-template-columns: 1fr;
-      grid-template-rows: 1fr 1fr 1fr;
+      grid-template-columns: 1fr 1fr;
+      grid-template-rows: 1fr 1fr;
       gap: var(--grid-gap);
       position: absolute;
       top: 0; left: 0;
@@ -129,10 +132,9 @@
       min-height: 0;
       box-sizing: border-box;
       overflow: hidden;
-      display: block;
-      position: relative;
-      padding: 12px;
-      padding-right: 290px;
+      display: flex;
+      flex-direction: column;
+      align-items: stretch;
       margin: 0;
       padding: 0;
     }
@@ -145,26 +147,21 @@
     }
 
     .album-list {
-      flex: none;
-      width: 100%;
-      max-width: 100%;
-      height: 100%;
-      border-radius: 16px;
-      border-right: none;
-      padding-right: 0;
-      overflow: hidden;
-      font-size: clamp(0.8rem, 0.95vw, 0.92rem);
-    }
-    /* Portrait: dynamic spacing for albums with >16 tracks */
-    .compact-tracks .track-row {
-      margin-bottom: 2px !important;
-      line-height: 1.15 !important;
-      font-size: 0.88em !important;
-      padding-top: 2px !important;
-      padding-bottom: 2px !important;
-    }
-    .compact-tracks .album-info-header {
-      margin-bottom: 3px;
+      flex: 1 1 auto;
+      min-width: 0;
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+      background: linear-gradient(100deg, #242c3a 82%, #21d0d510 100%);
+      border-radius: 0 0 16px 16px;
+      box-shadow: 0 3px 24px #18e9f116;
+      border-top: 2.5px solid #19efe411;
+      color: #f4fcff;
+      padding: 10px 2% 10px 2.5%;
+      box-sizing: border-box;
+      align-items: flex-start;
+      overflow-y: auto;
+      font-size: clamp(0.83rem, 1vw, 0.98rem);
     }
     .album-list::-webkit-scrollbar {
       width: 8px;
@@ -273,23 +270,21 @@
       text-shadow: 0 1px 8px #12fffe38;
     }
     .album-cov {
-      position: absolute;
-      bottom: 12px;
-      right: 12px;
-      width: 260px;
-      height: 260px;
+      flex: 0 0 var(--cover-height);
+      height: var(--cover-height);
+      width: 100%;
       display: flex;
       align-items: center;
       justify-content: center;
       background: none;
-      z-index: 1;
+      order: -1;
     }
     .album-cov img {
       display: block;
-      width: 100%;
+      width: auto;
       height: 100%;
-      max-width: 260px;
-      max-height: 260px;
+      max-width: 100%;
+      max-height: 100%;
       aspect-ratio: 1/1;
       object-fit: contain;
       border-radius: 12px;
@@ -314,34 +309,53 @@
       z-index: 20;
       background: #18191a;
       display: flex;
-      flex-direction: row;
-      align-items: center;
-      justify-content: space-between;
-      gap: 1vw;
+      flex-direction: column;
+      align-items: stretch;
+      justify-content: flex-start;
       height: var(--footer-height);
       border-top: 1.5px solid #273b3c;
       box-shadow: 0 -1px 10px #111a3120;
-      padding-top: 0;
-      padding-bottom: 0;
-      min-height: 48px;
+      padding: 0;
+      min-height: 100px;
+    }
+    .status-row {
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      justify-content: center;
+      gap: 3vw;
+      padding: 8px 20px;
+      background: linear-gradient(180deg, #1a1d1e 0%, #18191a 100%);
+      border-bottom: 1px solid #273b3c44;
+      font-size: 1rem;
+      min-height: 36px;
+    }
+    .button-row {
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.6vw;
+      padding: 0 12px;
+      flex: 1;
+      align-self: center;
     }
     .playpanel {
       display: flex;
       flex-direction: row;
-      gap: 0.5em;
+      gap: 0.4em;
       align-items: center;
-      min-width: 134px;
-      margin-left: 14px;
+      min-width: 150px;
     }
     .playbtn {
-      width: 38px;
-      height: 38px;
-      min-width: 38px;
-      min-height: 38px;
-      max-width: 38px;
-      max-height: 38px;
-      margin: 0 2.8px;
-      border-radius: 6px;
+      width: 44px;
+      height: 44px;
+      min-width: 44px;
+      min-height: 44px;
+      max-width: 44px;
+      max-height: 44px;
+      margin: 0 1px;
+      border-radius: 7px;
       background: #232a29;
       color: var(--accent);
       border: none;
@@ -359,21 +373,21 @@
     .icon { pointer-events: none; }
     .keypad {
       flex: 1 1 auto;
-      min-width: 400px;
+      min-width: 440px;
       display: flex;
       justify-content: center;
       align-items: center;
-      gap: 6px;
+      gap: 0px;
       margin-bottom: 0;
     }
     .keypad-btn {
-      font-size: 1.14rem;
+      font-size: 1.18rem;
       background: #282a2c;
       color: #fff;
       border: none;
-      width: 38px; height: 38px;
-      margin: 0 2.8px;
-      border-radius: 6px;
+      width: 44px; height: 44px;
+      margin: 0 3px;
+      border-radius: 7px;
       text-align: center;
       transition: background 0.15s, box-shadow 0.12s;
       cursor: pointer;
@@ -387,15 +401,15 @@
     .cornerpanel {
       display: flex;
       flex-direction: row;
-      align-items: end;
-      gap: 7px;
-      margin-right: 16px;
+      align-items: center;
+      gap: 5px;
+      align-items: center;
     }
     .cornerpanel .btn {
-      min-width: 70px;
-      min-height: 32px;
-      padding: 7px 22px;
-      font-size: 1em;
+      min-width: 60px;
+      min-height: 36px;
+      padding: 5px 12px;
+      font-size: 0.98em;
       border-radius: 10px;
       border: 2px solid var(--accent);
       background: linear-gradient(100deg, #181f1f 70%, #0fc2b11a 100%);
@@ -743,9 +757,9 @@
 </head>
 <body>
   <div class="header">
-    <span style="text-align:left;">SELECT: <span id="selectcode">____</span></span>
-    <span>PLAYING: <span id="playingcode">____</span></span>
-    <span style="text-align:right;">QUEUED: <span id="queuecount">00</span></span>
+    <span></span>
+    <span></span>
+    <span style="text-align:right; cursor:pointer;" id="queued-label" title="Click to view queue">QUEUED: <span id="queuecount">00</span></span>
   </div>
   <div id="msg" aria-live="polite"></div>
   <main class="jukebox-app-viewport" id="main">
@@ -788,39 +802,45 @@
   </div>
   <!-- Bottom Row -->
   <div class="bottomrow" id="bottomrow">
-    <div class="playpanel" id="playpanel">
-      <button class="playbtn prev" id="btn-prev" title="Previous" aria-label="Previous">
-        <svg class="icon" width="19" height="19" fill="currentColor" viewBox="0 0 20 20"><path d="M7.5 15.5V4.5a1 1 0 0 1 2 0v3.9l7.51-4.63a1 1 0 0 1 1.49.87v13.52a1 1 0 0 1-1.49.86L9.5 11.6v3.9a1 1 0 0 1-2 0z"/></svg>
-      </button>
-      <button class="playbtn pause" id="btn-play" title="Play / Pause" aria-label="Play or Pause">
-        <svg class="icon" width="21" height="21" fill="currentColor" viewBox="0 0 20 20">
-          <rect x="4" y="4" width="4" height="12" rx="2"/>
-          <rect x="12" y="4" width="4" height="12" rx="2"/>
-        </svg>
-      </button>
-      <button class="playbtn next" id="btn-next" title="Next" aria-label="Next">
-        <svg class="icon" width="19" height="19" fill="currentColor" viewBox="0 0 20 20"><path d="M12.5 4.5v3.9l-7.51-4.62A1 1 0 0 0 3.5 4.65v13.53a1 1 0 0 0 1.49.87l7.51-4.63v3.9a1 1 0 0 0 2 0V4.5a1 1 0 0 0-2 0z"/></svg>
-      </button>
+    <div class="status-row">
+      <span style="text-align:left;">SELECT: <span id="selectcode">____</span></span>
+      <span>PLAYING: <span id="playingcode">____</span></span>
     </div>
-    <div class="keypad" id="keypad" style="display:flex;">
-      <button class="keypad-btn" data-key="<">&lt;</button>
-      <button class="keypad-btn" data-key="0">0</button>
-      <button class="keypad-btn" data-key="1">1</button>
-      <button class="keypad-btn" data-key="2">2</button>
-      <button class="keypad-btn" data-key="3">3</button>
-      <button class="keypad-btn" data-key="4">4</button>
-      <button class="keypad-btn" data-key="5">5</button>
-      <button class="keypad-btn" data-key="6">6</button>
-      <button class="keypad-btn" data-key="7">7</button>
-      <button class="keypad-btn" data-key="8">8</button>
-      <button class="keypad-btn" data-key="9">9</button>
-      <button class="keypad-btn" data-key="X">&#10006;</button>
-      <button class="keypad-btn" data-key=">">&gt;</button>
-    </div>
-    <div class="cornerpanel" id="cornerpanel">
-      <button id="login" class="btn btn-success daisy-btn">Login</button>
-      <button id="chooseplaylist" class="btn btn-accent daisy-btn" style="display:none; min-width: 55px; font-size: 0.88em;">Playlist</button>
-      <button id="logout" class="btn btn-accent daisy-btn" style="display:none; min-width: 55px; font-size: 0.88em;">Logout</button>
+    <div class="button-row">
+      <div class="playpanel" id="playpanel">
+        <button class="playbtn prev" id="btn-prev" title="Previous" aria-label="Previous">
+          <svg class="icon" width="19" height="19" fill="currentColor" viewBox="0 0 20 20"><path d="M7.5 15.5V4.5a1 1 0 0 1 2 0v3.9l7.51-4.63a1 1 0 0 1 1.49.87v13.52a1 1 0 0 1-1.49.86L9.5 11.6v3.9a1 1 0 0 1-2 0z"/></svg>
+        </button>
+        <button class="playbtn pause" id="btn-play" title="Play / Pause" aria-label="Play or Pause">
+          <svg class="icon" width="21" height="21" fill="currentColor" viewBox="0 0 20 20">
+            <rect x="4" y="4" width="4" height="12" rx="2"/>
+            <rect x="12" y="4" width="4" height="12" rx="2"/>
+          </svg>
+        </button>
+        <button class="playbtn next" id="btn-next" title="Next" aria-label="Next">
+          <svg class="icon" width="19" height="19" fill="currentColor" viewBox="0 0 20 20"><path d="M12.5 4.5v3.9l-7.51-4.62A1 1 0 0 0 3.5 4.65v13.53a1 1 0 0 0 1.49.87l7.51-4.63v3.9a1 1 0 0 0 2 0V4.5a1 1 0 0 0-2 0z"/></svg>
+        </button>
+      </div>
+      <div class="keypad" id="keypad" style="display:flex;">
+        <button class="keypad-btn" data-key="<">&lt;</button>
+        <button class="keypad-btn" data-key="0">0</button>
+        <button class="keypad-btn" data-key="1">1</button>
+        <button class="keypad-btn" data-key="2">2</button>
+        <button class="keypad-btn" data-key="3">3</button>
+        <button class="keypad-btn" data-key="4">4</button>
+        <button class="keypad-btn" data-key="5">5</button>
+        <button class="keypad-btn" data-key="6">6</button>
+        <button class="keypad-btn" data-key="7">7</button>
+        <button class="keypad-btn" data-key="8">8</button>
+        <button class="keypad-btn" data-key="9">9</button>
+        <button class="keypad-btn" data-key="X">&#10006;</button>
+        <button class="keypad-btn" data-key=">">&gt;</button>
+      </div>
+      <div class="cornerpanel" id="cornerpanel">
+        <button id="login" class="btn btn-success daisy-btn">Login</button>
+        <button id="chooseplaylist" class="btn btn-accent daisy-btn" style="display:none;">Playlist</button>
+        <button id="logout" class="btn btn-accent daisy-btn" style="display:none;">Logout</button>
+      </div>
     </div>
   </div>
   <script>
@@ -1189,24 +1209,20 @@
       const grid = document.createElement("div");
       grid.className = "main-grid";
       grid.dataset.pageidx = pageIdx;
-      const offset = pageIdx * 3;
-      for (let i = 0; i < 3; i++) {
-        const albumIdx = offset + i;
-        if (!albums[albumIdx]) {
+      const offset = pageIdx * 4;
+      for (let y = 0; y < 2; y++) for (let x = 0; x < 2; x++) {
+        const i = offset + y*2+x;
+        if (!albums[i]) {
           grid.appendChild(document.createElement("div"));
           continue;
         }
-        const alb = albums[albumIdx], cell = document.createElement("div");
+        const alb = albums[i], cell = document.createElement("div");
         cell.className = "album-cell";
         const leftpanel = document.createElement("div");
         leftpanel.className = "album-list scrollable";
-        // Add compact-tracks class if album has more than 16 tracks
-        if (alb.tracks && alb.tracks.length > 16) {
-          leftpanel.className = "album-list scrollable compact-tracks";
-        }
         let lefthtml = `
           <div class="album-info-header">
-            <span class="albnum">${ensure2(albumIdx)}</span>
+            <span class="albnum">${ensure2(i)}</span>
             <span class="album-title">${alb.name}</span>
           </div>
           <div>
@@ -1583,10 +1599,26 @@
 
     function exitQueueScroll() {
       queueScrollActive = false;
-      document.getElementById('queue-scroll-modal').style.display = "none";
-      // Clear snapshots to force rebuild on next open
+      
+      // Clean up scroll animation state
+      const container = document.querySelector('.queue-scroll-items-container');
+      if (container) {
+        if (queueScrollTimeout) {
+          clearTimeout(queueScrollTimeout);
+          queueScrollTimeout = null;
+        }
+        container.removeEventListener('transitionend', lastScroll.onEnd || (()=>{}));
+        container.style.transition = "";
+        container.style.transform = "translateY(0)";
+        lastScroll.running = false;
+        lastScroll.onEnd = null;
+      }
+      
+      // Reset queue snapshot state to force rebuild on next open
       lastQueueSnapshot = null;
       lastNowPlayingUri = null;
+      
+      document.getElementById('queue-scroll-modal').style.display = "none";
       resetInactivityTimer();
     }
     if (typeof renderQueue === "function") {
