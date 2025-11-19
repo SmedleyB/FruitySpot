@@ -20,6 +20,7 @@ Since this is the Connect version, it does require a local Spotify device (run S
 Reference FruitySpot readme (https://github.com/SmedleyB/FruitySpot/blob/main/FruitySpot/README.md) for general usage.
 <br>
 <br>
+
 ## Available Versions
 
 This folder contains **four** versions of JLRipoff to suit different needs:
