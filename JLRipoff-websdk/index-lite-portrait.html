@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=1080,initial-scale=1" />
-  <title>JLRipoff Portrait Lite (Performance Optimized)</title>
+  <title>JLRipoff Portrait</title>
   <link href="https://fonts.googleapis.com/css?family=Roboto+Mono:700" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/daisyui@4.12.2/dist/full.min.css" rel="stylesheet" />
   <style>
@@ -43,10 +43,10 @@
       font-weight: 700;
       font-size: 1.11rem;
       color: #12ffc8; /* default accent-cyan */
-      background: rgba(23,28,29,0.95);
+      background: #1e2a38;
       border-radius: 10px;
       border: 2.5px solid #21ffe7bb;
-      box-shadow: 0 4px 24px #19ffd27c, 0 2px 17px #17e9f765;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.2);
       max-width: 54vw;
       min-height: 1.8em;
       position: fixed;
@@ -59,13 +59,13 @@
       pointer-events: none;
       letter-spacing: 0.02em;
       padding: 14px 46px;
-      transition: opacity 0.22s;
+      transition: transform 0.2s;
     }
     #msg.error {
       color: #ff4187;
       border-color: #ff4187cc;
-      background: rgba(42,10,32,.98);
-      box-shadow: 0 4px 44px #ff418777, 0 2px 21px #ff418743;
+      background: #1e2a38;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.2);
     }
     .jukebox-app-viewport {
       position: absolute;
@@ -79,8 +79,8 @@
       display: flex;
       justify-content: center;
       align-items: stretch;
-      background: rgba(16, 22, 34, 0.85);
-      
+      background: #1e2a38;
+      box-shadow: 0 0 44px 12px #14ffea1c inset;
       border-radius: 0 0 38px 38px;
     }
     /* --- Fancy Main Page Styling from Queue Modal --- */
@@ -92,8 +92,7 @@
       padding: 24px 24px;
       overflow: hidden;
       /* Fancy gradient background similar to modal */
-      background: rgba(18,24,31,0.95);
-      
+      background: #1e2a38;
     }
 
     .main-grid {
@@ -106,10 +105,10 @@
       position: absolute;
       top: 0; left: 0;
       z-index: 1;
-      background: rgba(28,38,52,0.5);
+      background: #1e2a38;
       border-radius: 24px;
-      
-      border: 2.5px solid rgba(24,234,233,0.2);
+      box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+      border: 2.5px solid #18eae911;
       transition: transform 0.48s cubic-bezier(.8,-0.01,.2,1.01);
       will-change: transform;
       transform: translateZ(0);
@@ -121,10 +120,10 @@
     .main-grid.show { transform: translateX(0);}
 
     .album-cell {
-      background: rgba(21,44,80,0.65);
+      background: #1e2a38;
       border-radius: 16px;
-      border: 2.5px solid rgba(33,255,233,0.3);
-      box-shadow: 0 4px 16px rgba(27,238,191,0.15);
+      border: 2.5px solid #21ffe944;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.2);
       position: relative;
       width: 100%;
       height: 100%;
@@ -137,14 +136,13 @@
       align-items: stretch;
       margin: 0;
       padding: 0;
-    
-      contain: layout style paint;}
+    }
     .album-cell:hover,
     .album-cell:focus-within {
       border-color: #22ffe7;
-      box-shadow: 0 6px 28px rgba(27,238,191,0.3);
-      background: rgba(33,77,140,0.7);
-      transition: box-shadow 0.21s, border-color 0.21s;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+      background: #1e2a38;
+      transition: transform 0.2s;
     }
 
     .album-list {
@@ -153,18 +151,17 @@
       min-height: 0;
       display: flex;
       flex-direction: column;
-      background: #242c3a;
+      background: #1e2a38;
       border-radius: 0 0 16px 16px;
-      
-      border-top: 2.5px solid rgba(25,239,244,0.15);
+      box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+      border-top: 2.5px solid #19efe411;
       color: #f4fcff;
       padding: 10px 2% 10px 2.5%;
       box-sizing: border-box;
       align-items: flex-start;
       overflow-y: auto;
       font-size: clamp(0.83rem, 1vw, 0.98rem);
-    
-      contain: layout style paint;}
+    }
     .album-list::-webkit-scrollbar {
       width: 8px;
       background: #252b35;
@@ -194,10 +191,8 @@
       letter-spacing: 0.02em;
       text-align: center;
       line-height: 1.18;
-      box-shadow: 0 2px 8px rgba(9,254,255,0.25);
-      border: 2.3px solid #13f3e4;
-      
-      
+      box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+      border: 2.3px solid #13f3e4; saturate(1.1);
       display: inline-block;
       vertical-align: middle;
     }
@@ -213,7 +208,6 @@
       display: inline-block;
       line-height: 1;
       vertical-align: middle;
-      
     }
     .album-artist {
       color: #13e2e8;
@@ -226,8 +220,6 @@
       word-break: break-word;
       white-space: pre-line;
       padding-left: 1px;
-      
-      
     }
     .track-row {
       border-left: 3.5px solid #14fbe222;
@@ -241,9 +233,9 @@
       align-items: center;
       max-width: 100%;
       padding-left: 7px;
-      background: linear-gradient(97deg,rgba(32,66,94,0.13) 62%,rgba(46,180,180,0.07) 100%);
+      background: #1e2a38;
       border-radius: 7px 17px 13px 7px;
-      box-shadow: 0 2px 10px #13efd71a;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.2);
     }
     .tracknum {
       font-size: 0.80em !important;
@@ -254,7 +246,7 @@
       color: #f0fffd;
       border-radius: 13px;
       font-weight: 800;
-      box-shadow: 0 2px 6px rgba(33,253,200,0.4);
+      box-shadow: 0 2px 6px rgba(0,0,0,0.2);
       border: 1.7px solid #17f9d4ee;
       vertical-align: middle;
       display: inline-block;
@@ -269,7 +261,6 @@
       color: #fafafa;
       font-weight: 600;
       letter-spacing: 0.01em;
-      
     }
     .album-cov {
       flex: 0 0 var(--cover-height);
@@ -292,13 +283,14 @@
       border-radius: 12px;
       border: 2.5px solid #1beebf85;
       background: #292929;
-      box-shadow: 0 4px 16px rgba(25,255,210,0.4);
-      
+      box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+      /* animation disabled */
       margin: 0 auto;
     }
+    /* Disabled for performance */
     @keyframes artPulse {
-      from {  }
-      to   { }
+      from { }
+      to   { saturate(1.12);}
     }
 
     .modal[open] { display: flex; align-items: center; justify-content: center; }
@@ -369,8 +361,8 @@
       align-items: center;
       justify-content: center;
       font-size: 1.19em;
-      transition: background 0.16s, color 0.13s, box-shadow 0.19s;
-      
+      transition: transform 0.2s;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.2);
       cursor: pointer;
     }
     .playbtn:hover { background: var(--accent); color:#fff; }
@@ -394,14 +386,14 @@
       margin: 0 3px;
       border-radius: 7px;
       text-align: center;
-      transition: background 0.15s;
+      transition: transform 0.2s;
       cursor: pointer;
       font-family: inherit;
-      
+      box-shadow: 0 2px 6px rgba(0,0,0,0.2);
     }
     .keypad-btn:active, .keypad-btn.selected {
       background: #4f4f51;
-      
+      box-shadow: 0 2px 6px rgba(0,0,0,0.2);
     }
     .cornerpanel {
       display: flex;
@@ -416,16 +408,12 @@
       font-size: 0.98em;
       border-radius: 10px;
       border: 2px solid var(--accent);
-      background: #181f1f;
+      background: #1e2a38;
       color: var(--accent);
       font-weight: 800;
-      box-shadow: 0 2px 8px rgba(18,255,243,0.3);
+      box-shadow: 0 2px 6px rgba(0,0,0,0.2);
       letter-spacing: 0.01em;
-      transition: 
-        background 0.16s,
-        color 0.13s, 
-        border-color 0.18s,
-        box-shadow 0.22s;
+      transition: transform 0.2s;
     }
     .cornerpanel .btn:active,
     .cornerpanel .btn.selected,
@@ -433,8 +421,7 @@
       background: var(--accent);
       color: #fff;
       border-color: #21ffe7;
-      
-      
+      box-shadow: 0 2px 6px rgba(0,0,0,0.2); saturate(1.07);
     }
     .cornerpanel .btn-info { border:1.3px solid #36bdf8; color:#38bdf8;}
     .cornerpanel .btn-error { border:1.3px solid #f43f5e; color:#f43f5e;}
@@ -453,9 +440,8 @@
       position: fixed;
       top: 0; left: 0; right: 0; bottom: 0;
       z-index: 10999;
-      background: linear-gradient(135deg, rgba(18,24,31,0.98) 60%, rgba(52,210,220,0.12) 100%);
+      background: #1e2a38;
       animation: fadeInBG 0.7s cubic-bezier(.7,0,.7,1);
-      backdrop-
       flex-direction: column;
       align-items: center;
       justify-content: center;
@@ -476,12 +462,12 @@
       flex-direction: column;
       align-items: center;
       position: relative;
-      box-shadow: 0 8px 96px #1beebf1f;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.2);
       border-radius: 24px;
       background: rgba(16,22,26,0.83);
       padding: 0;
       border: 2px solid #11b8ae33;
-      transition: box-shadow 0.38s cubic-bezier(.7,0,.6,1);
+      transition: transform 0.2s;
       animation: queuePopIn 0.45s cubic-bezier(.3,1.21,.16,1.01);
     }
     @keyframes queuePopIn {
@@ -510,14 +496,12 @@
       text-align: center;
       font-weight: 900;
       letter-spacing: 0.09em;
-      
       pointer-events: none;
        /*  border-radius: 24px 24px 0 0; */
-      background: linear-gradient(180deg, #181f1fef 65%, #12192410 100%);
+      background: #1e2a38;
       border-bottom: 3px solid #1beebf88;
-      box-shadow: 0 8px 28px #14ffd224, 0 4px 18px #19ffe02f;
-      backdrop-
-      -webkit-backdrop-
+      box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+      -webkit-
     }
     .queue-scroll-item {
       display: flex;
@@ -538,8 +522,8 @@
       animation-delay: var(--del, 0s);
       /* margin-bottom: 7px; */
       border: 1.2px solid #32e7fc25;
-      background: linear-gradient(93deg,rgba(21,44,80,0.36) 70%,rgba(46,180,180,0.13) 100%);
-      box-shadow: 0 5px 24px #1afdcc0d;
+      background: #1e2a38;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.2);
       will-change: opacity,transform;
     }
     @keyframes itemFadeUp {
@@ -549,17 +533,16 @@
     }
     .queue-scroll-item.now-playing {
       border:2.6px solid #16ffc5e8;
-      background: linear-gradient(
+      background: #1e2a38;
         88deg, #10d7ae70 25%, #18e7e038 65%, rgba(19,29,52,0.61) 100%);
-      box-shadow: 0 1px 35px #15eaca88;
-      
+      box-shadow: 0 2px 6px rgba(0,0,0,0.2); saturate(1.06);
       color: #fff !important;
       animation: itemPulseHighlight 2.6s ease-in-out infinite alternate;
       z-index: 5;
     }
     @keyframes itemPulseHighlight {
-      from { box-shadow: 0 1px 39px #15eaca31, 0 8px 80px #13be8b23; }
-      to   { box-shadow: 0 1px 51px #05f5c9c8, 0 8px 120px #12ffc015;}
+      from { box-shadow: 0 2px 6px rgba(0,0,0,0.2); }
+      to   { box-shadow: 0 2px 6px rgba(0,0,0,0.2);}
     }
     .queue-scroll-art {
       width: 74px;
@@ -570,29 +553,28 @@
       background: #25282c;
       object-fit: cover;
       border: 2.1px solid #2b6560;
-      box-shadow: 0 4px 22px #13ffd336, 0 2px 24px #27aaff18;
-      
+      box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+      /* animation disabled */
     }
     .queue-scroll-details {
       flex:1; display:flex; flex-direction:column; min-width:0; overflow:hidden; padding-top:7px;
     }
     .queue-scroll-title {
-      font-weight: 900; color: #fafafa; letter-spacing: 0.01em; margin-bottom: 2px;
-       font-size: 1.12em; line-height: 1.23;
+      font-weight: 900; color: #fafafa; letter-spacing: 0.01em; margin-bottom: 2px; font-size: 1.12em; line-height: 1.23;
       white-space: nowrap; text-overflow: ellipsis; overflow: hidden;
     }
     .queue-scroll-artist {
-      font-weight: 400; color: #13e2e8; 
+      font-weight: 400; color: #13e2e8;
       margin-bottom: 2px; font-size: 1em; white-space: nowrap; text-overflow: ellipsis; overflow: hidden;
     }
     .queue-scroll-album {
       color: #30fae4; font-size: 0.92em; opacity: 0.94; white-space: nowrap;
-      text-overflow: ellipsis; overflow: hidden; font-weight: 400; 
+      text-overflow: ellipsis; overflow: hidden; font-weight: 400;
     }
     .queue-count-badge {
       position: absolute; right: 38px; top: 10px; background: #151f3cc7; color:#15ffd4;
       padding: 6px 15px; border-radius: 70px; font-size: 1.05em; font-weight: 700; letter-spacing: 0.06em;
-      box-shadow: 0 3px 17px #09feff1d; border:2.5px solid #13e6be;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.2); border:2.5px solid #13e6be;
     }
     .queue-scroll-items-container {
       display: block;
@@ -632,15 +614,12 @@
       /* Pulse like the card! */
       color: #3ffede;
       opacity: 0.98;
-      
       font-weight: 700;
-      
       animation: itemPulseHighlight 2.6s ease-in-out infinite alternate;
     }
     .queue-scroll-exit-hint {
       position:absolute; bottom: 3.5vh; width:100%; text-align:center;
-      font-size:1.13em; color:#97fff8cc; letter-spacing:0.07em; user-select:none; z-index:100;
-      text-shadow:0 2px 12px #33f0ff81; pointer-events:none; animation: exitPulse 2.5s cubic-bezier(.5,0,.5,1) infinite;
+      font-size:1.13em; color:#97fff8cc; letter-spacing:0.07em; user-select:none; z-index:100; pointer-events:none; animation: exitPulse 2.5s cubic-bezier(.5,0,.5,1) infinite;
     }
     @keyframes exitPulse {
       0% { opacity: 0.80; transform: scale(1.01);}
@@ -676,7 +655,7 @@
     #playlist-list .playlist-choice {
     display: block;
     margin: 5px auto;
-    background: linear-gradient(90deg, #232a39 60%, #17ffd220 100%);
+    background: #1e2a38;
     color: #18ffd8;
     font-weight: 600;
     border: 2px solid #16fed7dd;
@@ -686,8 +665,8 @@
     cursor: pointer;
     letter-spacing: 0.03em;
     font-size: 1.08em;
-    box-shadow: 0 3px 14px #1beebf24;
-    transition: background 0.18s, color 0.14s, border 0.18s, box-shadow 0.23s;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+    transition: transform 0.2s;
     box-sizing: border-box;
     text-align: left;    /* Optional: for better readability if names are long */
   }
@@ -695,7 +674,7 @@
     background: #19ffe4;
     color: #021510;
     border-color: #16ffe7;
-    box-shadow: 0 5px 22px #1beebf44;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.2);
   }
   #playlist-loading {
     display:block;
@@ -706,7 +685,7 @@
     width: 95vw;
     min-width: 340px;
     border-radius: 24px;
-    box-shadow: 0 8px 96px #1beebf1f;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.2);
     background: rgba(16,22,26,0.92);
     border: 2px solid #11b8ae33;
     padding: 2rem 2.5rem;
@@ -718,19 +697,18 @@
     font-size: 1em;
     border-radius: 10px;
     border: 2px solid var(--accent);
-    background: linear-gradient(100deg, #181f1f 70%, #14b8a610 100%);
+    background: #1e2a38;
     color: var(--accent);
     font-weight: 800;
-    box-shadow: 0 2px 8px rgba(18,255,243,0.3);
+    box-shadow: 0 2px 6px rgba(0,0,0,0.2);
     letter-spacing: 0.01em;
-    transition: background 0.16s, color 0.13s, border-color 0.18s, box-shadow 0.22s;
+    transition: transform 0.2s;
   }
   #playlist-modal .btn-accent:hover, #playlist-modal .btn-accent.selected {
       background: var(--accent);
       color: #fff;
       border-color: #21ffe7;
-      
-      
+      box-shadow: 0 2px 6px rgba(0,0,0,0.2); saturate(1.07);
   }
   #playlist-url {
     width: 100%;
@@ -741,11 +719,10 @@
     font-size: 1.05em;
   }
   .queue-scroll-item.not-in-set {
-    background: linear-gradient(88deg, #3b2c4b 65%, #7e57c214 100%) !important;
+    background: #1e2a38;
     border: 2.6px dashed #6d6e8c !important;
     color: #c6bfff !important;
-    box-shadow: 0 1px 35px #8e5eea33, 0 8px 80px #48217533;
-    
+    box-shadow: 0 2px 6px rgba(0,0,0,0.2); saturate(1.03);
     position: relative;
   }
   .queue-scroll-item.not-in-set .queue-scroll-title::after {
@@ -754,7 +731,6 @@
     font-size: 0.69em;
     margin-left: 8px;
     font-weight: 400;
-    
     vertical-align: super;
   }
   </style>
@@ -1701,7 +1677,7 @@
         }
         if (idx !== entries.length - 1) d.style.marginBottom = "7px";
         d.innerHTML = `
-          <span class="queue-pos-num" style="min-width:2.8em;display:inline-block;font-weight:800;color:#19ffe0;font-size:1.12em;text-align:right;padding-right:10px;filter:brightness(1.08)">${queueNumber}.</span>
+          <span class="queue-pos-num" style="min-width:2.8em;display:inline-block;font-weight:800;color:#19ffe0;font-size:1.12em;text-align:right;padding-right:10px;">${queueNumber}.</span>
           <img class="queue-scroll-art" src="${item.art || ''}" loading="lazy" />
           <div class="queue-scroll-details">
             <div class="queue-scroll-title">${item.title}</div>
