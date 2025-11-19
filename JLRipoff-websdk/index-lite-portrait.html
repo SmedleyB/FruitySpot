@@ -1603,10 +1603,26 @@
 
     function exitQueueScroll() {
       queueScrollActive = false;
-      document.getElementById('queue-scroll-modal').style.display = "none";
-      // Clear snapshots to force rebuild on next open
+      
+      // Clean up scroll animation state
+      const container = document.querySelector('.queue-scroll-items-container');
+      if (container) {
+        if (queueScrollTimeout) {
+          clearTimeout(queueScrollTimeout);
+          queueScrollTimeout = null;
+        }
+        container.removeEventListener('transitionend', lastScroll.onEnd || (()=>{}));
+        container.style.transition = "";
+        container.style.transform = "translateY(0)";
+        lastScroll.running = false;
+        lastScroll.onEnd = null;
+      }
+      
+      // Reset queue snapshot state to force rebuild on next open
       lastQueueSnapshot = null;
       lastNowPlayingUri = null;
+      
+      document.getElementById('queue-scroll-modal').style.display = "none";
       resetInactivityTimer();
     }
     if (typeof renderQueue === "function") {
