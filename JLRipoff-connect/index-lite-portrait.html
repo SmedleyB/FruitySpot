@@ -230,6 +230,20 @@
       overflow: hidden;
       text-overflow: ellipsis;
     }
+    /* Compact spacing for albums with many tracks (>16) */
+    .compact-tracks .track-row {
+      margin-bottom: 2px !important;
+      line-height: 1.15 !important;
+      font-size: 0.88em;
+      padding-top: 2px;
+      padding-bottom: 2px;
+    }
+    .compact-tracks .album-info-header {
+      margin-bottom: 3px;
+    }
+    .compact-tracks .album-artist {
+      margin-bottom: 2px;
+    }
     .tracknum {
       font-size: 0.75em !important;
       padding: 2px 10px;
@@ -1555,6 +1569,10 @@
         cov.innerHTML = `<img src="${alb.art || ""}" alt="album art">`;
         const leftpanel = document.createElement("div");
         leftpanel.className = "album-list scrollable";
+        // Add compact-tracks class when album has more than 16 tracks
+        if (alb.tracks.length > 16) {
+          leftpanel.classList.add("compact-tracks");
+        }
         let lefthtml = `
           <div class="album-info-header">
             <span class="albnum">${ensure2(albumIdx)}</span>
