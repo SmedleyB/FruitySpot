@@ -761,8 +761,6 @@
 </head>
 <body>
   <div class="header">
-    <span style="text-align:left;">SELECT: <span id="selectcode">____</span></span>
-    <span>PLAYING: <span id="playingcode">____</span></span>
     <span style="text-align:right;"><span id="queued-label" style="cursor:pointer;color:#14b8a6;" title="Click to view Spotify queue">QUEUED</span>: <span id="queuecount">00</span></span>
   </div>
   <div id="msg" aria-live="polite"></div>
@@ -821,6 +819,10 @@
   </dialog>
   <!-- Bottom Row -->
   <div class="bottomrow" id="bottomrow">
+    <div class="status-row" style="display:flex; align-items:center; gap:2vw; font-size:1rem;">
+      <span style="text-align:left;">SELECT: <span id="selectcode">____</span></span>
+      <span>PLAYING: <span id="playingcode">____</span></span>
+    </div>
     <div class="playpanel" id="playpanel">
       <button class="playbtn prev" id="btn-prev" title="Previous" aria-label="Previous">
         <svg class="icon" width="19" height="19" fill="currentColor" viewBox="0 0 20 20"><path d="M7.5 15.5V4.5a1 1 0 0 1 2 0v3.9l7.51-4.63a1 1 0 0 1 1.49.87v13.52a1 1 0 0 1-1.49.86L9.5 11.6v3.9a1 1 0 0 1-2 0z"/></svg>
