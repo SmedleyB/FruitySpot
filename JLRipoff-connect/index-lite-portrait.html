@@ -1885,6 +1885,10 @@
         lastScroll.onEnd = null;
       }
       
+      // Reset queue snapshot state to force rebuild on next open
+      lastQueueSnapshot = null;
+      lastNowPlayingUri = null;
+      
       document.getElementById('queue-scroll-modal').style.display = "none";
       resetInactivityTimer();
     }
