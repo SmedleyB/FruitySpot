@@ -124,9 +124,11 @@
       min-height: 0;
       box-sizing: border-box;
       overflow: hidden;
-      display: block;
+      display: flex;
+      flex-direction: row;
+      align-items: stretch;
       margin: 0;
-      padding: 12px;
+      padding: 0;
       contain: layout style paint;
     }
     .album-cell:hover,
@@ -138,11 +140,20 @@
     }
 
     .album-list {
-      display: block;
-      overflow-y: auto;
-      height: 100%;
+      flex: 1 1 auto;
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      background: #242c3a;
+      border-radius: 16px 0 0 16px;
+      border-right: 2.5px solid rgba(25,239,244,0.15);
       color: #f4fcff;
-      font-size: clamp(0.85rem, 1vw, 1.0rem);
+      padding: 13px 2% 13px 2.8%;
+      box-sizing: border-box;
+      align-items: flex-start;
+      overflow-y: auto;
+      font-size: clamp(0.85rem, 1vw, 1.01rem);
+      height: 100%;
       contain: layout style paint;
     }
     .album-list::-webkit-scrollbar {
@@ -248,22 +259,27 @@
       line-height: 1.3;
     }
     .album-cov {
-      float: right;
-      width: 45%;
-      max-width: 220px;
-      margin: 0 0 12px 12px;
+      flex: 0 1 350px;
+      min-width: 100px;
+      max-width: 440px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
       background: none;
     }
     .album-cov img {
       display: block;
-      width: 100%;
+      width: 96%;
       height: auto;
+      max-width: 400px;
+      max-height: 90%;
       aspect-ratio: 1/1;
       object-fit: contain;
       border-radius: 12px;
       border: 2.5px solid rgba(27,238,191,0.6);
       background: #292929;
       box-shadow: 0 4px 16px rgba(25,255,210,0.4);
+      margin: 0 auto;
     }
     /* Disabled for performance - artPulse animation removed */
     @keyframes artPulse {
@@ -1548,8 +1564,8 @@
             <span class="track-title">${track.name}</span></div>`;
         });
         leftpanel.innerHTML = lefthtml;
-        cell.appendChild(cov);
         cell.appendChild(leftpanel);
+        cell.appendChild(cov);
         grid.appendChild(cell);
       }
       return grid;
