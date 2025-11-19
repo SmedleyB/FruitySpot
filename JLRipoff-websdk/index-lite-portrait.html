@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=1080,initial-scale=1" />
-  <title>JLRipoff Lite (Performance Optimized)</title>
+  <title>JLRipoff Lite Portrait (Performance Optimized)</title>
   <link href="https://fonts.googleapis.com/css?family=Roboto+Mono:700" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/daisyui@4.12.2/dist/full.min.css" rel="stylesheet" />
   <style>
@@ -19,10 +19,10 @@
       --footer-height: 60px;
       --grid-gap: 18px;
     }
-    html, body { min-width: 1080px; min-height: 100vh; background: var(--main-bg); color: var(--main-fg); font-family: "Roboto Mono", "Consolas", monospace; margin: 0; padding: 0; box-sizing: border-box; height: 100vh; width: 100vw; overflow: hidden;}
+    html, body { width: 1080px; max-width: 1080px; min-height: 1920px; background: var(--main-bg); color: var(--main-fg); font-family: "Roboto Mono", "Consolas", monospace; margin: 0; padding: 0; box-sizing: border-box; height: 100vh; overflow: hidden;}
     .header {
       position: fixed;
-      top: 0; left: 0; width: 100vw;
+      top: 0; left: 0; width: 1080px;
       height: var(--header-height);
       z-index: 100;
       background: #18191a;
@@ -33,7 +33,6 @@
       letter-spacing: 1.5px;
       padding: 0 30px;
       border-bottom: 1.5px solid #262b32;
-      min-width: 1080px;
       user-select: none;
     }
     .header span { flex: 1 1 0; text-align: center; }
@@ -72,8 +71,7 @@
       top: var(--header-height);
       bottom: var(--footer-height);
       height: calc(100vh - var(--header-height) - var(--footer-height));
-      width: 100vw;
-      min-width: 1080px;
+      width: 1080px;
       min-height: 360px;
       display: flex;
       justify-content: center;
@@ -99,8 +97,8 @@
       width: 100%;
       height: 100%;
       display: grid;
-      grid-template-columns: 1fr 1fr;
-      grid-template-rows: 1fr 1fr;
+      grid-template-columns: 1fr;
+      grid-template-rows: 1fr 1fr 1fr;
       gap: var(--grid-gap);
       position: absolute;
       top: 0; left: 0;
@@ -131,9 +129,10 @@
       min-height: 0;
       box-sizing: border-box;
       overflow: hidden;
-      display: flex;
-      flex-direction: row;
-      align-items: stretch;
+      display: block;
+      position: relative;
+      padding: 12px;
+      padding-right: 290px;
       margin: 0;
       padding: 0;
     }
@@ -146,22 +145,26 @@
     }
 
     .album-list {
-      flex: 1 1 60%;
-      min-width: 0;
-      display: flex;
-      flex-direction: column;
-      background: linear-gradient(100deg, #242c3a 82%, #21d0d510 100%);
-      border-radius: 16px 0 0 16px;
-      box-shadow: none;
-      border-right: 2.5px solid #19efe411;
-      color: #f4fcff;
-      padding: 13px 2% 13px 2.8%;
-      box-sizing: border-box;
-      align-items: flex-start;
-      max-width: 46vw;
-      overflow-y: auto;
-      font-size: clamp(0.85rem, 1vw, 1.01rem);
+      flex: none;
+      width: 100%;
+      max-width: 100%;
       height: 100%;
+      border-radius: 16px;
+      border-right: none;
+      padding-right: 0;
+      overflow: hidden;
+      font-size: clamp(0.8rem, 0.95vw, 0.92rem);
+    }
+    /* Portrait: dynamic spacing for albums with >16 tracks */
+    .compact-tracks .track-row {
+      margin-bottom: 2px !important;
+      line-height: 1.15 !important;
+      font-size: 0.88em !important;
+      padding-top: 2px !important;
+      padding-bottom: 2px !important;
+    }
+    .compact-tracks .album-info-header {
+      margin-bottom: 3px;
     }
     .album-list::-webkit-scrollbar {
       width: 8px;
@@ -265,21 +268,23 @@
       letter-spacing: 0.01em;
     }
     .album-cov {
-      flex: 0 1 350px;
-      min-width: 100px;
-      width: 35vw;
-      max-width: 440px;
+      position: absolute;
+      bottom: 12px;
+      right: 12px;
+      width: 260px;
+      height: 260px;
       display: flex;
       align-items: center;
       justify-content: center;
       background: none;
+      z-index: 1;
     }
     .album-cov img {
       display: block;
-      width: 96%;
-      height: auto;
-      max-width: 400px;
-      max-height: 90%;
+      width: 100%;
+      height: 100%;
+      max-width: 260px;
+      max-height: 260px;
       aspect-ratio: 1/1;
       object-fit: contain;
       border-radius: 12px;
@@ -806,8 +811,8 @@
     </div>
     <div class="cornerpanel" id="cornerpanel">
       <button id="login" class="btn btn-success daisy-btn">Login</button>
-      <button id="logout" class="btn btn-accent daisy-btn" style="display:none;">Logout</button>
-      <button id="chooseplaylist" class="btn btn-accent daisy-btn" style="display:none;">Playlist</button>
+      <button id="chooseplaylist" class="btn btn-accent daisy-btn" style="display:none; min-width: 55px; font-size: 0.88em;">Playlist</button>
+      <button id="logout" class="btn btn-accent daisy-btn" style="display:none; min-width: 55px; font-size: 0.88em;">Logout</button>
     </div>
   </div>
   <script>
@@ -1176,27 +1181,31 @@
       const grid = document.createElement("div");
       grid.className = "main-grid";
       grid.dataset.pageidx = pageIdx;
-      const offset = pageIdx * 4;
-      for (let y = 0; y < 2; y++) for (let x = 0; x < 2; x++) {
-        const i = offset + y*2+x;
-        if (!albums[i]) {
+      const offset = pageIdx * 3;
+      for (let i = 0; i < 3; i++) {
+        const albumIdx = offset + i;
+        if (!albums[albumIdx]) {
           grid.appendChild(document.createElement("div"));
           continue;
         }
-        const alb = albums[i], cell = document.createElement("div");
+        const alb = albums[albumIdx], cell = document.createElement("div");
         cell.className = "album-cell";
         const leftpanel = document.createElement("div");
         leftpanel.className = "album-list scrollable";
+        // Add compact-tracks class if album has more than 16 tracks
+        if (alb.tracks && alb.tracks.length > 16) {
+          leftpanel.className = "album-list scrollable compact-tracks";
+        }
         let lefthtml = `
           <div class="album-info-header">
-            <span class="albnum">${ensure2(i)}</span>
+            <span class="albnum">${ensure2(albumIdx)}</span>
             <span class="album-title">${alb.name}</span>
           </div>
           <div>
             <span class="album-artist">${alb.artist}</span>
           </div>
         `;
-        alb.tracks.slice(0, 25).forEach((track, tix) => {
+        alb.tracks.slice(0, 20).forEach((track, tix) => {
           lefthtml += `<div class="track-row"><span class="tracknum">${ensure2(tix+1)}</span>
             <span class="track-title">${track.name}</span></div>`;
         });

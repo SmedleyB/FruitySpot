@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=1080,initial-scale=1" />
-  <title>JLRipoff Lite (Performance Optimized)</title>
+  <title>JLRipoff Portrait</title>
   <link href="https://fonts.googleapis.com/css?family=Roboto+Mono:700" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/daisyui@4.12.2/dist/full.min.css" rel="stylesheet" />
   <style>
@@ -19,10 +19,10 @@
       --footer-height: 60px;
       --grid-gap: 18px;
     }
-    html, body { min-width: 1080px; min-height: 100vh; background: var(--main-bg); color: var(--main-fg); font-family: "Roboto Mono", "Consolas", monospace; margin: 0; padding: 0; box-sizing: border-box; height: 100vh; width: 100vw; overflow: hidden;}
+    html, body { width: 1080px; max-width: 1080px; min-height: 1920px; background: var(--main-bg); color: var(--main-fg); font-family: "Roboto Mono", "Consolas", monospace; margin: 0; padding: 0; box-sizing: border-box; height: 100vh; overflow: hidden;}
     .header {
       position: fixed;
-      top: 0; left: 0; width: 100vw;
+      top: 0; left: 0; width: 1080px;
       height: var(--header-height);
       z-index: 100;
       background: #18191a;
@@ -33,7 +33,6 @@
       letter-spacing: 1.5px;
       padding: 0 30px;
       border-bottom: 1.5px solid #262b32;
-      min-width: 1080px;
       user-select: none;
     }
     .header span { flex: 1 1 0; text-align: center; }
@@ -42,10 +41,10 @@
       font-weight: 700;
       font-size: 1.11rem;
       color: #12ffc8; /* default accent-cyan */
-      background: rgba(23,28,29,0.95);
+      background: linear-gradient(96deg, rgba(23,28,29,0.9) 76%, rgba(20,184,166,0.17) 99%);
       border-radius: 10px;
       border: 2.5px solid #21ffe7bb;
-      box-shadow: 0 4px 12px rgba(25,255,210,0.3);
+      box-shadow: 0 4px 24px #19ffd27c, 0 2px 17px #17e9f765;
       max-width: 54vw;
       min-height: 1.8em;
       position: fixed;
@@ -63,8 +62,8 @@
     #msg.error {
       color: #ff4187;
       border-color: #ff4187cc;
-      background: rgba(42,10,32,0.98);
-      box-shadow: 0 4px 18px rgba(255,65,135,0.4);
+      background: linear-gradient(96deg, rgba(42,10,32,.98) 88%, rgba(255,67,123,0.14) 100%);
+      box-shadow: 0 4px 44px #ff418777, 0 2px 21px #ff418743;
     }
     .jukebox-app-viewport {
       position: absolute;
@@ -72,14 +71,13 @@
       top: var(--header-height);
       bottom: var(--footer-height);
       height: calc(100vh - var(--header-height) - var(--footer-height));
-      width: 100vw;
-      min-width: 1080px;
+      width: 1080px;
       min-height: 360px;
       display: flex;
       justify-content: center;
       align-items: stretch;
-      background: rgba(16, 22, 34, 0.73);
-      box-shadow: none;
+      background: linear-gradient(110deg, rgba(16, 22, 34, 0.73) 69%, rgba(44,210,210,0.11) 100%);
+      box-shadow: 0 0 44px 12px #14ffea1c inset;
       border-radius: 0 0 38px 38px;
     }
     /* --- Fancy Main Page Styling from Queue Modal --- */
@@ -90,24 +88,24 @@
       box-sizing: border-box;
       padding: 32px 32px;
       overflow: hidden;
-      /* Simplified background for performance */
-      background: rgba(18,24,31,0.92);
-      contain: layout style paint;
+      /* Fancy gradient background similar to modal */
+      background: linear-gradient(120deg, rgba(18,24,31,0.92) 54%, rgba(52,210,220,0.09) 100%);
+      backdrop-filter: blur(4px);
     }
 
     .main-grid {
       width: 100%;
       height: 100%;
       display: grid;
-      grid-template-columns: 1fr 1fr;
-      grid-template-rows: 1fr 1fr;
+      grid-template-columns: 1fr;
+      grid-template-rows: 1fr 1fr 1fr;
       gap: var(--grid-gap);
       position: absolute;
       top: 0; left: 0;
       z-index: 1;
-      background: rgba(28,38,52,0.42);
+      background: linear-gradient(104deg,rgba(28,38,52,0.42) 70%,rgba(46,180,180,0.10) 100%);
       border-radius: 24px;
-      box-shadow: 0 6px 36px rgba(19,255,210,0.15);
+      box-shadow: 0 8px 64px #13ffd22c, 0 1.5px 11px #0fe0ed11;
       border: 2.5px solid #18eae911;
       transition: transform 0.48s cubic-bezier(.8,-0.01,.2,1.01);
       will-change: transform;
@@ -120,10 +118,10 @@
     .main-grid.show { transform: translateX(0);}
 
     .album-cell {
-      background: rgba(21,44,80,0.58);
+      background: linear-gradient(93deg,rgba(21,44,80,0.58) 65%,rgba(46,180,180,0.14) 100%);
       border-radius: 16px;
       border: 2.5px solid #21ffe944;
-      box-shadow: 0 4px 24px rgba(27,238,191,0.15);
+      box-shadow: 0 6px 38px #1beebf21, 0 2px 12px #1afdcc11;
       position: relative;
       width: 100%;
       height: 100%;
@@ -131,37 +129,42 @@
       min-height: 0;
       box-sizing: border-box;
       overflow: hidden;
-      display: flex;
-      flex-direction: row;
-      align-items: stretch;
+      display: block;
+      position: relative;
+      padding: 12px;
+      padding-right: 290px;
       margin: 0;
       padding: 0;
     }
     .album-cell:hover,
     .album-cell:focus-within {
       border-color: #22ffe7;
-      box-shadow: 0 6px 36px rgba(27,238,191,0.25);
-      background: rgba(33,77,140,0.64);
+      box-shadow: 0 8px 64px #1beebf45, 0 1.5px 11px #18eee141;
+      background: linear-gradient(93deg,rgba(33,77,140,0.64) 63%,rgba(46,222,220,0.19) 100%);
       transition: box-shadow 0.21s, border-color 0.21s;
     }
 
     .album-list {
-      flex: 1 1 60%;
-      min-width: 0;
-      display: flex;
-      flex-direction: column;
-      background: linear-gradient(100deg, #242c3a 82%, #21d0d510 100%);
-      border-radius: 16px 0 0 16px;
-      box-shadow: none;
-      border-right: 2.5px solid #19efe411;
-      color: #f4fcff;
-      padding: 13px 2% 13px 2.8%;
-      box-sizing: border-box;
-      align-items: flex-start;
-      max-width: 46vw;
-      overflow-y: auto;
-      font-size: clamp(0.85rem, 1vw, 1.01rem);
+      flex: none;
+      width: 100%;
+      max-width: 100%;
       height: 100%;
+      border-radius: 16px;
+      border-right: none;
+      padding-right: 0;
+      overflow: hidden;
+      font-size: clamp(0.8rem, 0.95vw, 0.92rem);
+    }
+    /* Portrait: dynamic spacing for albums with >16 tracks */
+    .compact-tracks .track-row {
+      margin-bottom: 2px !important;
+      line-height: 1.15 !important;
+      font-size: 0.88em !important;
+      padding-top: 2px !important;
+      padding-bottom: 2px !important;
+    }
+    .compact-tracks .album-info-header {
+      margin-bottom: 3px;
     }
     .album-list::-webkit-scrollbar {
       width: 8px;
@@ -192,9 +195,10 @@
       letter-spacing: 0.02em;
       text-align: center;
       line-height: 1.18;
-      box-shadow: 0 2px 12px rgba(9,254,255,0.2);
+      box-shadow: 0 3px 17px #09feff36, 0 2px 13px #14eae832;
       border: 2.3px solid #13f3e4;
-      text-shadow: none;
+      filter: brightness(1.15) saturate(1.1);
+      text-shadow: 0 1.5px 12px #12fff328;
       display: inline-block;
       vertical-align: middle;
     }
@@ -210,6 +214,7 @@
       display: inline-block;
       line-height: 1;
       vertical-align: middle;
+      text-shadow: 0 2px 12px #12fffe2a;
     }
     .album-artist {
       color: #13e2e8;
@@ -222,6 +227,8 @@
       word-break: break-word;
       white-space: pre-line;
       padding-left: 1px;
+      filter: blur(0.18px);
+      text-shadow: 0 2px 10px #1cdbe922;
     }
     .track-row {
       border-left: 3.5px solid #14fbe222;
@@ -235,9 +242,9 @@
       align-items: center;
       max-width: 100%;
       padding-left: 7px;
-      background: rgba(32,66,94,0.13);
+      background: linear-gradient(97deg,rgba(32,66,94,0.13) 62%,rgba(46,180,180,0.07) 100%);
       border-radius: 7px 17px 13px 7px;
-      box-shadow: none;
+      box-shadow: 0 2px 10px #13efd71a;
     }
     .tracknum {
       font-size: 0.80em !important;
@@ -248,7 +255,7 @@
       color: #f0fffd;
       border-radius: 13px;
       font-weight: 800;
-      box-shadow: 0 1px 6px rgba(33,253,200,0.4);
+      box-shadow: 0 2px 7px #21fdc871, 0 1px 8px #2dd8f844;
       border: 1.7px solid #17f9d4ee;
       vertical-align: middle;
       display: inline-block;
@@ -263,33 +270,39 @@
       color: #fafafa;
       font-weight: 600;
       letter-spacing: 0.01em;
+      text-shadow: 0 1px 8px #12fffe38;
     }
     .album-cov {
-      flex: 0 1 350px;
-      min-width: 100px;
-      width: 35vw;
-      max-width: 440px;
+      position: absolute;
+      bottom: 12px;
+      right: 12px;
+      width: 260px;
+      height: 260px;
       display: flex;
       align-items: center;
       justify-content: center;
       background: none;
+      z-index: 1;
     }
     .album-cov img {
       display: block;
-      width: 96%;
-      height: auto;
-      max-width: 400px;
-      max-height: 90%;
+      width: 100%;
+      height: 100%;
+      max-width: 260px;
+      max-height: 260px;
       aspect-ratio: 1/1;
       object-fit: contain;
       border-radius: 12px;
       border: 2.5px solid #1beebf85;
       background: #292929;
-      box-shadow: 0 3px 18px rgba(25,255,210,0.5);
+      box-shadow: 0 4px 26px #19ffd2b0, 0 2px 18px #27aaff25;
+      animation: artPulse 2.46s cubic-bezier(.7,0,.55,1) infinite alternate;
       margin: 0 auto;
-      contain: layout style paint;
     }
-    /* artPulse animation disabled for performance */
+    @keyframes artPulse {
+      from { filter: brightness(1.03); }
+      to   { filter: brightness(1.22) saturate(1.12);}
+    }
 
     .modal[open] { display: flex; align-items: center; justify-content: center; }
     .modalbg { background:rgba(0,0,0,0.67); position:fixed; z-index:100; top:0; left:0; right:0; bottom:0; }
@@ -806,8 +819,8 @@
     </div>
     <div class="cornerpanel" id="cornerpanel">
       <button id="login" class="btn btn-success daisy-btn">Login</button>
-      <button id="logout" class="btn btn-accent daisy-btn" style="display:none;">Logout</button>
-      <button id="chooseplaylist" class="btn btn-accent daisy-btn" style="display:none;">Playlist</button>
+      <button id="chooseplaylist" class="btn btn-accent daisy-btn" style="display:none; min-width: 55px; font-size: 0.88em;">Playlist</button>
+      <button id="logout" class="btn btn-accent daisy-btn" style="display:none; min-width: 55px; font-size: 0.88em;">Logout</button>
     </div>
   </div>
   <script>
@@ -1176,27 +1189,31 @@
       const grid = document.createElement("div");
       grid.className = "main-grid";
       grid.dataset.pageidx = pageIdx;
-      const offset = pageIdx * 4;
-      for (let y = 0; y < 2; y++) for (let x = 0; x < 2; x++) {
-        const i = offset + y*2+x;
-        if (!albums[i]) {
+      const offset = pageIdx * 3;
+      for (let i = 0; i < 3; i++) {
+        const albumIdx = offset + i;
+        if (!albums[albumIdx]) {
           grid.appendChild(document.createElement("div"));
           continue;
         }
-        const alb = albums[i], cell = document.createElement("div");
+        const alb = albums[albumIdx], cell = document.createElement("div");
         cell.className = "album-cell";
         const leftpanel = document.createElement("div");
         leftpanel.className = "album-list scrollable";
+        // Add compact-tracks class if album has more than 16 tracks
+        if (alb.tracks && alb.tracks.length > 16) {
+          leftpanel.className = "album-list scrollable compact-tracks";
+        }
         let lefthtml = `
           <div class="album-info-header">
-            <span class="albnum">${ensure2(i)}</span>
+            <span class="albnum">${ensure2(albumIdx)}</span>
             <span class="album-title">${alb.name}</span>
           </div>
           <div>
             <span class="album-artist">${alb.artist}</span>
           </div>
         `;
-        alb.tracks.slice(0, 25).forEach((track, tix) => {
+        alb.tracks.slice(0, 20).forEach((track, tix) => {
           lefthtml += `<div class="track-row"><span class="tracknum">${ensure2(tix+1)}</span>
             <span class="track-title">${track.name}</span></div>`;
         });
