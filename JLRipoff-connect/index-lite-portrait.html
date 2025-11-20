@@ -1393,27 +1393,44 @@
       tokenExp = Date.now() + (expiresIn - 30) * 1000;
       localStorage.setItem("spotify_token_data", JSON.stringify({ token, refreshToken, tokenExp }));
     }
-    function restoreTokenData() {
+/* Replace the existing restoreTokenData() and checkLogin() with the async versions below */
+
+    async function restoreTokenData() {
       try {
         const json = localStorage.getItem("spotify_token_data");
         if (!json) return false;
         const { token: t, refreshToken: r, tokenExp: e } = JSON.parse(json);
         token = t; refreshToken = r; tokenExp = e;
         if (!token || !refreshToken) return false;
-        if (Date.now() > tokenExp) { refreshAccessToken(); return false; }
+    
+        if (Date.now() > tokenExp) {
+          // token expired — attempt a refresh and wait for the result
+          try {
+            await refreshAccessToken();
+            // refreshAccessToken updates token/tokenExp if successful
+            return !!token;
+          } catch (err) {
+            console.error("Token refresh during restore failed:", err);
+            return false;
+          }
+        }
+    
         return true;
-      } catch { return false; }
+      } catch (err) {
+        console.error("restoreTokenData parse error:", err);
+        return false;
+      }
     }
-    function scheduleTokenRefresh() {
-      if (!tokenExp) return;
-      const ms = tokenExp - Date.now();
-      if (ms > 0) setTimeout(refreshAccessToken, ms);
-    }
+    
     async function checkLogin() {
       const url = new URL(window.location);
       const code = url.searchParams.get("code");
-      if (code) await fetchToken(code);
-      else if (!restoreTokenData()) { showLogin(); return false; }
+      if (code) {
+        await fetchToken(code);
+      } else {
+        const ok = await restoreTokenData();
+        if (!ok) { showLogin(); return false; }
+      }
       showApp();
       scheduleTokenRefresh();
       return true;
