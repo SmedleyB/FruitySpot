@@ -804,21 +804,21 @@
     </div>
     <div class="queue-scroll-exit-hint">Tap or press any key to return</div>
   </div>
-  <!-- Device Select Modal -->
-  <dialog id="device-modal" class="modal" role="dialog" aria-modal="true" style="z-index:10500;">
-    <div class="modalbg"></div>
-    <form method="dialog" class="modalbox flex flex-col items-center">
-      <h3 class="font-bold text-lg mb-3" style="color:#19ffe4;">Choose Playback Device</h3>
-      <div id="device-list" style="min-width:320px;min-height:54px;width:95%;text-align:center;"></div>
-      <div class="modal-action mt-6">
-        <button type="button" class="btn btn-accent daisy-btn" id="device-cancel">Cancel</button>
-      </div>
-      <div id="device-help" class="mt-4 text-[#27fdee] text-base text-center max-w-xs" style="display:none;">
-        No available devices detected.<br>
-        <b>Tip:</b> Open Spotify on your phone, PC, or tablet, and play something to activate it.
-      </div>
-    </form>
-  </dialog>
+<!-- Device Select Modal -->
+<dialog id="device-modal" class="modal" role="dialog" aria-modal="true" style="z-index:10500;">
+  <div class="modalbg"></div>
+  <form method="dialog" class="modalbox flex flex-col items-center">
+    <h3 class="font-bold text-lg mb-3" style="color:#19ffe4;">Choose Playback Device</h3>
+    <div id="device-list" style="min-width:320px;min-height:54px;width:95%;text-align:center;"></div>
+    <div id="device-help" class="mt-4 text-[#27fdee] text-base text-center max-w-xs" style="display:none;">
+      No available devices detected.<br>
+      <b>Tip:</b> Open Spotify on your phone, PC, or tablet, and play something to activate it.
+    </div>
+    <div class="modal-action">
+      <button type="button" class="btn btn-accent daisy-btn" id="device-cancel">Cancel</button>
+    </div>
+  </form>
+</dialog>
   <!-- Bottom Row -->
   <div class="bottomrow" id="bottomrow">
     <div class="playpanel" id="playpanel">
