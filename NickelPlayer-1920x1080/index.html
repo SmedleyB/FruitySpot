@@ -758,23 +758,75 @@
                 throw error;
             }
         };
-
-        /**
-         * Ensure we have a valid access token (refresh if necessary)
-         */
-        const ensureValidToken = async () => {
-            if (!accessToken) {
-                throw new Error('Not authenticated');
+        const restoreTokensFromStorage = async () => {
+            try {
+                const storedAccess = localStorage.getItem(TOKEN_STORAGE_KEY);
+                const storedRefresh = localStorage.getItem(REFRESH_TOKEN_STORAGE_KEY);
+                const storedExpiry = parseInt(localStorage.getItem(TOKEN_EXPIRY_KEY) || '0', 10) || 0;
+        
+                if (storedAccess) accessToken = storedAccess;
+                if (storedRefresh) refreshToken = storedRefresh;
+                if (storedExpiry) tokenExpiresAt = storedExpiry;
+        
+                // If we don't have an access token but do have a refresh token, try to refresh now
+                if (!accessToken && refreshToken) {
+                    try {
+                        await refreshAccessToken();
+                        return true; // refreshed ok
+                    } catch (err) {
+                        console.warn('restoreTokensFromStorage: refresh failed', err);
+                        return false;
+                    }
+                }
+        
+                // If we have an access token but it is already expired, try to refresh
+                if (accessToken && Date.now() > tokenExpiresAt) {
+                    try {
+                        await refreshAccessToken();
+                        return true;
+                    } catch (err) {
+                        console.warn('restoreTokensFromStorage: expired token refresh failed', err);
+                        return false;
+                    }
+                }
+        
+                return !!accessToken;
+            } catch (err) {
+                console.error('restoreTokensFromStorage error', err);
+                return false;
             }
-
+        };
+        
+        const ensureValidToken = async () => {
+            // If accessToken is missing, attempt to restore from localStorage (and refresh if needed)
+            if (!accessToken) {
+                const ok = await restoreTokensFromStorage();
+                if (!ok) throw new Error('Not authenticated');
+            }
+        
             // Refresh token if it expires in less than 60 seconds
             if (Date.now() > (tokenExpiresAt - 60000)) {
                 await refreshAccessToken();
             }
-
+        
             return accessToken;
         };
-
+        
+        // Optional: attempt to restore on load so UI can remain signed-in across reloads
+        (async function initAuth() {
+            try {
+                const ok = await restoreTokensFromStorage();
+                if (ok) {
+                    // hide auth UI if it is visible by default
+                    if (select && typeof select === 'function') {
+                        const modal = select('#auth-modal');
+                        if (modal && !modal.classList.contains('hidden')) modal.classList.add('hidden');
+                    }
+                }
+            } catch (e) {
+                console.debug('initAuth: no previous session restored');
+            }
+        })();
         /**
          * Wrapper for Spotify API calls that handles token expiry and refresh
          */
