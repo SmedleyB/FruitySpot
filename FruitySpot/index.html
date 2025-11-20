@@ -294,7 +294,29 @@ async function exchangeCodeForToken(code, verifier){
   const data = await resp.json(); saveTokens(data); return data;
 }
 async function refreshAccess(){ if(!refreshToken) throw new Error('No refresh token'); const body = new URLSearchParams({ grant_type:'refresh_token', refresh_token: refreshToken, client_id: CONFIG.CLIENT_ID }); const r = await fetch('https://accounts.spotify.com/api/token', { method:'POST', headers:{'Content-Type':'application/x-www-form-urlencoded'}, body: body.toString() }); if(!r.ok) throw new Error('Refresh failed: '+r.status); const d = await r.json(); saveTokens(d); return d; }
-async function ensureToken(){ if(!accessToken) throw new Error('Not authenticated'); if(Date.now() > (expiresAt - 60000)) await refreshAccess(); return accessToken; }
+/* Replace ensureToken() with this improved version */
+
+async function ensureToken(){
+  // if we don't have an in-memory access token but have a stored refresh token, try to refresh
+  if(!accessToken) {
+    if(refreshToken) {
+      try {
+        await refreshAccess();
+      } catch(err) {
+        // refresh failed; treat as not authenticated
+        throw new Error('Not authenticated');
+      }
+    } else {
+      throw new Error('Not authenticated');
+    }
+  }
+
+  // refresh if within 60s of expiry
+  if(Date.now() > (expiresAt - 60000)) {
+    await refreshAccess();
+  }
+  return accessToken;
+}
 
 async function spFetch(path, opts = {}){
   await ensureToken();
