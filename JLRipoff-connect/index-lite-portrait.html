@@ -1421,7 +1421,11 @@
         return false;
       }
     }
-    
+    function scheduleTokenRefresh() {
+      if (!tokenExp) return;
+      const ms = tokenExp - Date.now();
+      if (ms > 0) setTimeout(refreshAccessToken, ms);
+    }
     async function checkLogin() {
       const url = new URL(window.location);
       const code = url.searchParams.get("code");
