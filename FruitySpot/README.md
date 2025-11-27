@@ -24,7 +24,7 @@ Prerequisites
 
 Register redirect origin
 - In the Spotify Developer Dashboard, add the runtime origin you will use as a Redirect URI:
-  - For local testing: `http://localhost:8000` (or `http://127.0.0.1:8000`)
+  - For local testing: `http://127.0.0.1:8000`
   - The redirect URI used at runtime must exactly match one registered in the dashboard (scheme, host, port, trailing slash).
 
 Download & run
@@ -42,7 +42,7 @@ Download & run
     ```
     py -3 -m http.server 8000
     ```
-- Open in a browser: http://localhost:8000/index.html
+- Open in a browser: http://127.0.0.1:8000/index.html
 
 Using the webpage (index.html)
 
