@@ -791,8 +791,8 @@
     </div>
     <div class="cornerpanel" id="cornerpanel">
       <button id="login" class="btn btn-success daisy-btn">Login</button>
-      <button id="logout" class="btn btn-accent daisy-btn" style="display:none;">Logout</button>
       <button id="chooseplaylist" class="btn btn-accent daisy-btn" style="display:none;">Playlist</button>
+      <button id="logout" class="btn btn-accent daisy-btn" style="display:none;">Logout</button>
     </div>
   </div>
   <script>
@@ -802,7 +802,7 @@
     let inactivityTimer = null;
     let queueScrollActive = false;
     const clientId = "REPLACE_WITH_SPOTIFY_API_CLIENT_ID";
-    const redirectUri = "http://localhost:8000/";
+    const redirectUri = "http://127.0.0.1:8000/";
     let token = null, refreshToken = null, expiresIn = null, tokenExp = null;
     let clearMsgTimer = null;
     let albums = [], currentPage = 0, keypadDigits = "";
